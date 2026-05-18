@@ -4,6 +4,7 @@ import com.example.quote_service_eventstore.quote.dto.QuoteCreateRequest;
 import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.quote.service.QuoteInMemoryService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,64 +16,39 @@ import java.util.UUID;
 @RequestMapping("/api/quotes")
 public class QuoteController {
 
+    private final QuoteInMemoryService quoteInMemoryService;
+
+    public QuoteController(QuoteInMemoryService quoteInMemoryService) {
+        this.quoteInMemoryService = quoteInMemoryService;
+    }
+
     @PostMapping
     public QuoteResponse create(@Valid @RequestBody QuoteCreateRequest request) {
-        String quoteId = UUID.randomUUID().toString();
-
-        return new QuoteResponse(
-                quoteId,
-                "DRAFT"
-        );
+        return quoteInMemoryService.create(request);
     }
 
     @PostMapping("/{id}/submit")
     public QuoteResponse submit(@PathVariable String id) {
-        return new QuoteResponse(
-                id,
-                "SUBMITTED"
-        );
+        return quoteInMemoryService.submit(id);
     }
 
     @PostMapping("/{id}/approve")
     public QuoteResponse approve(@PathVariable String id) {
-        return new QuoteResponse(
-                id,
-                "APPROVED"
-        );
+        return quoteInMemoryService.approve(id);
     }
 
     @GetMapping("/{id}")
     public QuoteDetailResponse detail(@PathVariable String id) {
-        return new QuoteDetailResponse(
-                id,
-                "Nguyen Van A",
-                "MOTOR",
-                new BigDecimal("1200000"),
-                "DRAFT",
-                List.of("SUBMIT")
-        );
+        return quoteInMemoryService.detail(id);
     }
 
     @GetMapping
     public List<QuoteListItemResponse> list(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String productCode
     ) {
-        return List.of(
-                new QuoteListItemResponse(
-                        "quote-001",
-                        "Nguyen Van A",
-                        "MOTOR",
-                        new BigDecimal("1200000"),
-                        "DRAFT"
-                ),
-                new QuoteListItemResponse(
-                        "quote-002",
-                        "Tran Thi B",
-                        "HEALTH",
-                        new BigDecimal("2500000"),
-                        "SUBMITTED"
-                )
-        );
+        return quoteInMemoryService.list(keyword, status, productCode);
     }
 }
+
