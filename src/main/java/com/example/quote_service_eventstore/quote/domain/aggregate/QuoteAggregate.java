@@ -4,6 +4,9 @@ import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.model.QuoteStatus;
 
 import java.math.BigDecimal;
@@ -20,19 +23,8 @@ public class QuoteAggregate {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static QuoteAggregate create(CreateQuoteCommand command) {
-        LocalDateTime now = LocalDateTime.now();
-
-        QuoteAggregate aggregate = new QuoteAggregate();
-        aggregate.id = UUID.randomUUID().toString();
-        aggregate.customerName = command.getCustomerName();
-        aggregate.productCode = command.getProductCode();
-        aggregate.premium = command.getPremium();
-        aggregate.status = QuoteStatus.DRAFT;
-        aggregate.createdAt = now;
-        aggregate.updatedAt = now;
-
-        return aggregate;
+    public static QuoteAggregate empty() {
+        return new QuoteAggregate();
     }
 
     public static QuoteAggregate restore(
@@ -56,26 +48,63 @@ public class QuoteAggregate {
         return aggregate;
     }
 
-    public void submit(SubmitQuoteCommand command) {
+    public QuoteCreatedEvent create(CreateQuoteCommand command) {
+        return new QuoteCreatedEvent(
+                UUID.randomUUID().toString(),
+                command.getCustomerName(),
+                command.getProductCode(),
+                command.getPremium(),
+                command.getCreatedBy(),
+                LocalDateTime.now()
+        );
+    }
+
+    public QuoteSubmittedEvent submit(SubmitQuoteCommand command) {
         if (this.status != QuoteStatus.DRAFT) {
             throw new BusinessException(
                     "Only DRAFT quote can be submitted. Current status: " + this.status
             );
         }
 
-        this.status = QuoteStatus.SUBMITTED;
-        this.updatedAt = LocalDateTime.now();
+        return new QuoteSubmittedEvent(
+                this.id,
+                command.getSubmittedBy(),
+                LocalDateTime.now()
+        );
     }
 
-    public void approve(ApproveQuoteCommand command) {
+    public QuoteApprovedEvent approve(ApproveQuoteCommand command) {
         if (this.status != QuoteStatus.SUBMITTED) {
             throw new BusinessException(
                     "Only SUBMITTED quote can be approved. Current status: " + this.status
             );
         }
 
+        return new QuoteApprovedEvent(
+                this.id,
+                command.getApprovedBy(),
+                LocalDateTime.now()
+        );
+    }
+
+    public void apply(QuoteCreatedEvent event) {
+        this.id = event.getQuoteId();
+        this.customerName = event.getCustomerName();
+        this.productCode = event.getProductCode();
+        this.premium = event.getPremium();
+        this.status = QuoteStatus.DRAFT;
+        this.createdAt = event.occurredAt();
+        this.updatedAt = event.occurredAt();
+    }
+
+    public void apply(QuoteSubmittedEvent event) {
+        this.status = QuoteStatus.SUBMITTED;
+        this.updatedAt = event.occurredAt();
+    }
+
+    public void apply(QuoteApprovedEvent event) {
         this.status = QuoteStatus.APPROVED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = event.occurredAt();
     }
 
     public String getId() {
@@ -106,3 +135,4 @@ public class QuoteAggregate {
         return updatedAt;
     }
 }
+

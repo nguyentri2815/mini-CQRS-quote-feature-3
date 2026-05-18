@@ -7,6 +7,9 @@ import com.example.quote_service_eventstore.quote.application.command.CreateQuot
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.mapper.QuoteAggregateMapper;
 import com.example.quote_service_eventstore.quote.domain.aggregate.QuoteAggregate;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
@@ -34,7 +37,11 @@ public class QuoteCommandService {
     }
 
     public QuoteResponse create(CreateQuoteCommand command) {
-        QuoteAggregate aggregate = QuoteAggregate.create(command);
+        QuoteAggregate aggregate = QuoteAggregate.empty();
+
+        QuoteCreatedEvent event = aggregate.create(command);
+
+        aggregate.apply(event);
 
         Quote quote = quoteAggregateMapper.toModel(aggregate);
 
@@ -48,7 +55,9 @@ public class QuoteCommandService {
 
         QuoteAggregate aggregate = quoteAggregateMapper.toAggregate(quote);
 
-        aggregate.submit(command);
+        QuoteSubmittedEvent event = aggregate.submit(command);
+
+        aggregate.apply(event);
 
         Quote updatedQuote = quoteAggregateMapper.toModel(aggregate);
 
@@ -62,7 +71,9 @@ public class QuoteCommandService {
 
         QuoteAggregate aggregate = quoteAggregateMapper.toAggregate(quote);
 
-        aggregate.approve(command);
+        QuoteApprovedEvent event = aggregate.approve(command);
+
+        aggregate.apply(event);
 
         Quote updatedQuote = quoteAggregateMapper.toModel(aggregate);
 
@@ -168,4 +179,5 @@ public class QuoteCommandService {
         return quote.getProductCode().equalsIgnoreCase(productCode);
     }
 }
+
 
