@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: quote-postgres
+    environment:
+      POSTGRES_DB: quote_db
+      POSTGRES_USER: quote_user
+      POSTGRES_PASSWORD: quote_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - quote_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  quote_postgres_data:

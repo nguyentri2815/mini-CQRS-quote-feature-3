@@ -17,6 +17,7 @@ import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
 import com.example.quote_service_eventstore.quote.model.Quote;
 import com.example.quote_service_eventstore.quote.model.QuoteStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class QuoteCommandService {
         this.quoteAggregateLoader = quoteAggregateLoader;
     }
 
-
+    @Transactional
     public QuoteResponse create(CreateQuoteCommand command) {
         QuoteAggregate aggregate = QuoteAggregate.empty();
 
@@ -64,6 +65,7 @@ public class QuoteCommandService {
         return toResponse(quote);
     }
 
+    @Transactional
     public QuoteResponse submit(SubmitQuoteCommand command) {
         QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 
@@ -80,6 +82,7 @@ public class QuoteCommandService {
         return toResponse(updatedQuote);
     }
 
+    @Transactional
     public QuoteResponse approve(ApproveQuoteCommand command) {
         QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 
