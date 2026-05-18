@@ -1,9 +1,14 @@
 package com.example.quote_service_eventstore.quote.api;
 
+import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
+import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
+import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
+import com.example.quote_service_eventstore.quote.application.mapper.QuoteCommandMapper;
 import com.example.quote_service_eventstore.quote.dto.QuoteCreateRequest;
 import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.quote.service.QuoteCommandService;
 import com.example.quote_service_eventstore.quote.service.QuoteInMemoryService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -16,30 +21,56 @@ import java.util.UUID;
 @RequestMapping("/api/quotes")
 public class QuoteController {
 
-    private final QuoteInMemoryService quoteInMemoryService;
+    private final QuoteCommandService quoteCommandService;
+    private final QuoteCommandMapper quoteCommandMapper;
 
-    public QuoteController(QuoteInMemoryService quoteInMemoryService) {
-        this.quoteInMemoryService = quoteInMemoryService;
+    public QuoteController(
+            QuoteCommandService quoteCommandService,
+            QuoteCommandMapper quoteCommandMapper
+    ) {
+        this.quoteCommandService = quoteCommandService;
+        this.quoteCommandMapper = quoteCommandMapper;
     }
 
     @PostMapping
     public QuoteResponse create(@Valid @RequestBody QuoteCreateRequest request) {
-        return quoteInMemoryService.create(request);
+        String currentUser = "demo-user";
+
+        CreateQuoteCommand command = quoteCommandMapper.toCreateCommand(
+                request,
+                currentUser
+        );
+
+        return quoteCommandService.create(command);
     }
 
     @PostMapping("/{id}/submit")
     public QuoteResponse submit(@PathVariable String id) {
-        return quoteInMemoryService.submit(id);
+        String currentUser = "demo-user";
+
+        SubmitQuoteCommand command = quoteCommandMapper.toSubmitCommand(
+                id,
+                currentUser
+        );
+
+        return quoteCommandService.submit(command);
     }
 
     @PostMapping("/{id}/approve")
     public QuoteResponse approve(@PathVariable String id) {
-        return quoteInMemoryService.approve(id);
+        String currentUser = "demo-user";
+
+        ApproveQuoteCommand command = quoteCommandMapper.toApproveCommand(
+                id,
+                currentUser
+        );
+
+        return quoteCommandService.approve(command);
     }
 
     @GetMapping("/{id}")
     public QuoteDetailResponse detail(@PathVariable String id) {
-        return quoteInMemoryService.detail(id);
+        return quoteCommandService.detail(id);
     }
 
     @GetMapping
@@ -48,7 +79,8 @@ public class QuoteController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String productCode
     ) {
-        return quoteInMemoryService.list(keyword, status, productCode);
+        return quoteCommandService.list(keyword, status, productCode);
     }
 }
+
 
