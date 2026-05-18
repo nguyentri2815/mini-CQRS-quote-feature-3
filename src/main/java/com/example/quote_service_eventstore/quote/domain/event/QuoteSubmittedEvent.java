@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 
 public class QuoteSubmittedEvent implements DomainEvent {
 
-    private final String quoteId;
-    private final String submittedBy;
-    private final LocalDateTime occurredAt;
+    private String quoteId;
+    private String submittedBy;
+    private LocalDateTime occurredAt;
+
+    public QuoteSubmittedEvent() {
+    }
 
     public QuoteSubmittedEvent(
             String quoteId,
@@ -22,8 +25,20 @@ public class QuoteSubmittedEvent implements DomainEvent {
         return quoteId;
     }
 
+    public void setQuoteId(String quoteId) {
+        this.quoteId = quoteId;
+    }
+
     public String getSubmittedBy() {
         return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public void setOccurredAt(LocalDateTime occurredAt) {
+        this.occurredAt = occurredAt;
     }
 
     @Override
@@ -41,3 +56,4 @@ public class QuoteSubmittedEvent implements DomainEvent {
         return occurredAt;
     }
 }
+

@@ -35,14 +35,18 @@ public class QuoteCommandService {
 
     private final QuoteAggregateMapper quoteAggregateMapper;
     private final EventStore eventStore;
+    private final QuoteAggregateLoader quoteAggregateLoader;
 
     public QuoteCommandService(
             QuoteAggregateMapper quoteAggregateMapper,
-            EventStore eventStore
+            EventStore eventStore,
+            QuoteAggregateLoader quoteAggregateLoader
     ) {
         this.quoteAggregateMapper = quoteAggregateMapper;
         this.eventStore = eventStore;
+        this.quoteAggregateLoader = quoteAggregateLoader;
     }
+
 
     public QuoteResponse create(CreateQuoteCommand command) {
         QuoteAggregate aggregate = QuoteAggregate.empty();
@@ -61,9 +65,7 @@ public class QuoteCommandService {
     }
 
     public QuoteResponse submit(SubmitQuoteCommand command) {
-        Quote quote = findQuoteOrThrow(command.getQuoteId());
-
-        QuoteAggregate aggregate = quoteAggregateMapper.toAggregate(quote);
+        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 
         QuoteSubmittedEvent event = aggregate.submit(command);
 
@@ -79,9 +81,7 @@ public class QuoteCommandService {
     }
 
     public QuoteResponse approve(ApproveQuoteCommand command) {
-        Quote quote = findQuoteOrThrow(command.getQuoteId());
-
-        QuoteAggregate aggregate = quoteAggregateMapper.toAggregate(quote);
+        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 
         QuoteApprovedEvent event = aggregate.approve(command);
 

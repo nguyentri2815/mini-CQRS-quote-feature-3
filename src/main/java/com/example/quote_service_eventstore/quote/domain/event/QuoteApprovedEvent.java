@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 
 public class QuoteApprovedEvent implements DomainEvent {
 
-    private final String quoteId;
-    private final String approvedBy;
-    private final LocalDateTime occurredAt;
+    private String quoteId;
+    private String approvedBy;
+    private LocalDateTime occurredAt;
+
+    public QuoteApprovedEvent() {
+    }
 
     public QuoteApprovedEvent(
             String quoteId,
@@ -22,8 +25,20 @@ public class QuoteApprovedEvent implements DomainEvent {
         return quoteId;
     }
 
+    public void setQuoteId(String quoteId) {
+        this.quoteId = quoteId;
+    }
+
     public String getApprovedBy() {
         return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public void setOccurredAt(LocalDateTime occurredAt) {
+        this.occurredAt = occurredAt;
     }
 
     @Override

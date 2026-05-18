@@ -4,6 +4,7 @@ import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
+import com.example.quote_service_eventstore.quote.domain.event.DomainEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
@@ -107,6 +108,25 @@ public class QuoteAggregate {
         this.updatedAt = event.occurredAt();
     }
 
+    public void apply(DomainEvent event) {
+        if (event instanceof QuoteCreatedEvent quoteCreatedEvent) {
+            apply(quoteCreatedEvent);
+            return;
+        }
+
+        if (event instanceof QuoteSubmittedEvent quoteSubmittedEvent) {
+            apply(quoteSubmittedEvent);
+            return;
+        }
+
+        if (event instanceof QuoteApprovedEvent quoteApprovedEvent) {
+            apply(quoteApprovedEvent);
+            return;
+        }
+
+        throw new IllegalArgumentException("Unsupported event: " + event.eventName());
+    }
+
     public String getId() {
         return id;
     }
@@ -134,5 +154,7 @@ public class QuoteAggregate {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+
 }
 

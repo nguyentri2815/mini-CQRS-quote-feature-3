@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 
 public class QuoteCreatedEvent implements DomainEvent {
 
-    private final String quoteId;
-    private final String customerName;
-    private final String productCode;
-    private final BigDecimal premium;
-    private final String createdBy;
-    private final LocalDateTime occurredAt;
+    private String quoteId;
+    private String customerName;
+    private String productCode;
+    private BigDecimal premium;
+    private String createdBy;
+    private LocalDateTime occurredAt;
+
+    public QuoteCreatedEvent() {
+    }
 
     public QuoteCreatedEvent(
             String quoteId,
@@ -32,20 +35,44 @@ public class QuoteCreatedEvent implements DomainEvent {
         return quoteId;
     }
 
+    public void setQuoteId(String quoteId) {
+        this.quoteId = quoteId;
+    }
+
     public String getCustomerName() {
         return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public String getProductCode() {
         return productCode;
     }
 
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
     public BigDecimal getPremium() {
         return premium;
     }
 
+    public void setPremium(BigDecimal premium) {
+        this.premium = premium;
+    }
+
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public void setOccurredAt(LocalDateTime occurredAt) {
+        this.occurredAt = occurredAt;
     }
 
     @Override
@@ -63,3 +90,4 @@ public class QuoteCreatedEvent implements DomainEvent {
         return occurredAt;
     }
 }
+
