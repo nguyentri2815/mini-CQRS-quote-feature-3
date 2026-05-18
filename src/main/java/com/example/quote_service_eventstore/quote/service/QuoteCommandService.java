@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.service;
 
+import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.common.exception.NotFoundException;
 import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
@@ -28,18 +29,27 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class QuoteCommandService {
 
+    private static final String QUOTE_AGGREGATE_TYPE = "Quote";
+
     private final Map<String, Quote> quoteStore = new ConcurrentHashMap<>();
 
     private final QuoteAggregateMapper quoteAggregateMapper;
+    private final EventStore eventStore;
 
-    public QuoteCommandService(QuoteAggregateMapper quoteAggregateMapper) {
+    public QuoteCommandService(
+            QuoteAggregateMapper quoteAggregateMapper,
+            EventStore eventStore
+    ) {
         this.quoteAggregateMapper = quoteAggregateMapper;
+        this.eventStore = eventStore;
     }
 
     public QuoteResponse create(CreateQuoteCommand command) {
         QuoteAggregate aggregate = QuoteAggregate.empty();
 
         QuoteCreatedEvent event = aggregate.create(command);
+
+        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
 
         aggregate.apply(event);
 
@@ -57,6 +67,8 @@ public class QuoteCommandService {
 
         QuoteSubmittedEvent event = aggregate.submit(command);
 
+        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+
         aggregate.apply(event);
 
         Quote updatedQuote = quoteAggregateMapper.toModel(aggregate);
@@ -72,6 +84,8 @@ public class QuoteCommandService {
         QuoteAggregate aggregate = quoteAggregateMapper.toAggregate(quote);
 
         QuoteApprovedEvent event = aggregate.approve(command);
+
+        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
 
         aggregate.apply(event);
 
@@ -179,5 +193,6 @@ public class QuoteCommandService {
         return quote.getProductCode().equalsIgnoreCase(productCode);
     }
 }
+
 
 
