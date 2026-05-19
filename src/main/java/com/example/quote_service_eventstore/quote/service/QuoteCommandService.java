@@ -4,6 +4,7 @@ import com.example.quote_service_eventstore.common.eventbus.DomainEventPublisher
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.common.exception.NotFoundException;
+import com.example.quote_service_eventstore.common.outbox.OutboxEventStore;
 import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
@@ -37,18 +38,21 @@ public class QuoteCommandService {
     private final EventStore eventStore;
     private final QuoteAggregateLoader quoteAggregateLoader;
 //    private final QuoteStateProjectionHandler quoteStateProjectionHandler;
-    private final DomainEventPublisher eventPublisher;
+//    private final DomainEventPublisher eventPublisher;
+    private final OutboxEventStore outboxEventStore;
 
     public QuoteCommandService(
             EventStore eventStore,
             QuoteAggregateLoader quoteAggregateLoader,
 //            QuoteStateProjectionHandler quoteStateProjectionHandler
-            DomainEventPublisher eventPublisher
+//            DomainEventPublisher eventPublisher
+            OutboxEventStore outboxEventStore
     ) {
         this.eventStore = eventStore;
         this.quoteAggregateLoader = quoteAggregateLoader;
 //        this.quoteStateProjectionHandler = quoteStateProjectionHandler;
-        this.eventPublisher = eventPublisher;
+//        this.eventPublisher = eventPublisher;
+        this.outboxEventStore = outboxEventStore;
     }
 
 
@@ -60,9 +64,10 @@ public class QuoteCommandService {
 
         eventStore.append(QUOTE_AGGREGATE_TYPE, event);
 
-        aggregate.apply(event);
+//        eventPublisher.publish(event);
+        outboxEventStore.save(event);
 
-        eventPublisher.publish(event);
+        aggregate.apply(event);
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -77,10 +82,11 @@ public class QuoteCommandService {
         QuoteSubmittedEvent event = aggregate.submit(command);
 
         eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+        outboxEventStore.save(event);
 
         aggregate.apply(event);
 
-        eventPublisher.publish(event);
+//        eventPublisher.publish(event);
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -95,10 +101,11 @@ public class QuoteCommandService {
         QuoteApprovedEvent event = aggregate.approve(command);
 
         eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+        outboxEventStore.save(event);
 
         aggregate.apply(event);
 
-        eventPublisher.publish(event);
+//        eventPublisher.publish(event);
 
         return new QuoteResponse(
                 aggregate.getId(),

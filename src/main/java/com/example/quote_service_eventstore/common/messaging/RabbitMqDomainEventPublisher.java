@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
-@Primary
+//@Primary: ngày 14 không dùng trực tiếp trong CommandService nữa.
 public class RabbitMqDomainEventPublisher implements DomainEventPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitMqDomainEventPublisher.class);
