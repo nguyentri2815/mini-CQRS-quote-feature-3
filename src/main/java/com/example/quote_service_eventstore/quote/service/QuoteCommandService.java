@@ -14,6 +14,7 @@ import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEve
 import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.quote.infrastructure.projection.handler.QuoteStateProjectionHandler;
 import com.example.quote_service_eventstore.quote.model.Quote;
 import com.example.quote_service_eventstore.quote.model.QuoteStatus;
 import org.springframework.stereotype.Service;
@@ -32,20 +33,18 @@ public class QuoteCommandService {
 
     private static final String QUOTE_AGGREGATE_TYPE = "Quote";
 
-    private final Map<String, Quote> quoteStore = new ConcurrentHashMap<>();
-
-    private final QuoteAggregateMapper quoteAggregateMapper;
     private final EventStore eventStore;
     private final QuoteAggregateLoader quoteAggregateLoader;
+    private final QuoteStateProjectionHandler quoteStateProjectionHandler;
 
     public QuoteCommandService(
-            QuoteAggregateMapper quoteAggregateMapper,
             EventStore eventStore,
-            QuoteAggregateLoader quoteAggregateLoader
+            QuoteAggregateLoader quoteAggregateLoader,
+            QuoteStateProjectionHandler quoteStateProjectionHandler
     ) {
-        this.quoteAggregateMapper = quoteAggregateMapper;
         this.eventStore = eventStore;
         this.quoteAggregateLoader = quoteAggregateLoader;
+        this.quoteStateProjectionHandler = quoteStateProjectionHandler;
     }
 
     @Transactional
@@ -58,11 +57,12 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        Quote quote = quoteAggregateMapper.toModel(aggregate);
+        quoteStateProjectionHandler.project(event);
 
-        quoteStore.put(quote.getId(), quote);
-
-        return toResponse(quote);
+        return new QuoteResponse(
+                aggregate.getId(),
+                aggregate.getStatus().name()
+        );
     }
 
     @Transactional
@@ -75,11 +75,12 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        Quote updatedQuote = quoteAggregateMapper.toModel(aggregate);
+        quoteStateProjectionHandler.project(event);
 
-        quoteStore.put(updatedQuote.getId(), updatedQuote);
-
-        return toResponse(updatedQuote);
+        return new QuoteResponse(
+                aggregate.getId(),
+                aggregate.getStatus().name()
+        );
     }
 
     @Transactional
@@ -92,50 +93,51 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        Quote updatedQuote = quoteAggregateMapper.toModel(aggregate);
+        quoteStateProjectionHandler.project(event);
 
-        quoteStore.put(updatedQuote.getId(), updatedQuote);
-
-        return toResponse(updatedQuote);
-    }
-
-    public QuoteDetailResponse detail(String id) {
-        Quote quote = findQuoteOrThrow(id);
-
-        return new QuoteDetailResponse(
-                quote.getId(),
-                quote.getCustomerName(),
-                quote.getProductCode(),
-                quote.getPremium(),
-                quote.getStatus().name(),
-                availableActions(quote.getStatus())
+        return new QuoteResponse(
+                aggregate.getId(),
+                aggregate.getStatus().name()
         );
     }
 
-    public List<QuoteListItemResponse> list(
-            String keyword,
-            String status,
-            String productCode
-    ) {
-        return quoteStore.values()
-                .stream()
-                .filter(quote -> matchKeyword(quote, keyword))
-                .filter(quote -> matchStatus(quote, status))
-                .filter(quote -> matchProductCode(quote, productCode))
-                .sorted(Comparator.comparing(Quote::getCreatedAt).reversed())
-                .map(this::toListItemResponse)
-                .toList();
-    }
-
-    private Quote findQuoteOrThrow(String id) {
-        Quote quote = quoteStore.get(id);
-
-        if (quote == null) {
-            throw new NotFoundException("Quote not found: " + id);
-        }
-
-        return quote;
-    }
+//    public QuoteDetailResponse detail(String id) {
+//        Quote quote = findQuoteOrThrow(id);
+//
+//        return new QuoteDetailResponse(
+//                quote.getId(),
+//                quote.getCustomerName(),
+//                quote.getProductCode(),
+//                quote.getPremium(),
+//                quote.getStatus().name(),
+//                availableActions(quote.getStatus())
+//        );
+//    }
+//
+//    public List<QuoteListItemResponse> list(
+//            String keyword,
+//            String status,
+//            String productCode
+//    ) {
+//        return quoteStore.values()
+//                .stream()
+//                .filter(quote -> matchKeyword(quote, keyword))
+//                .filter(quote -> matchStatus(quote, status))
+//                .filter(quote -> matchProductCode(quote, productCode))
+//                .sorted(Comparator.comparing(Quote::getCreatedAt).reversed())
+//                .map(this::toListItemResponse)
+//                .toList();
+//    }
+//
+//    private Quote findQuoteOrThrow(String id) {
+//        Quote quote = quoteStore.get(id);
+//
+//        if (quote == null) {
+//            throw new NotFoundException("Quote not found: " + id);
+//        }
+//
+//        return quote;
+//    }
 
     private QuoteResponse toResponse(Quote quote) {
         return new QuoteResponse(

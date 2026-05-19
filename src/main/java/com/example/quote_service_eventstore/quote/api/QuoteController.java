@@ -8,6 +8,7 @@ import com.example.quote_service_eventstore.quote.dto.QuoteCreateRequest;
 import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.quote.query.QuoteQueryService;
 import com.example.quote_service_eventstore.quote.service.QuoteCommandService;
 import com.example.quote_service_eventstore.quote.service.QuoteInMemoryService;
 import jakarta.validation.Valid;
@@ -23,13 +24,16 @@ public class QuoteController {
 
     private final QuoteCommandService quoteCommandService;
     private final QuoteCommandMapper quoteCommandMapper;
+    private final QuoteQueryService quoteQueryService;
 
     public QuoteController(
             QuoteCommandService quoteCommandService,
-            QuoteCommandMapper quoteCommandMapper
+            QuoteCommandMapper quoteCommandMapper,
+            QuoteQueryService quoteQueryService
     ) {
         this.quoteCommandService = quoteCommandService;
         this.quoteCommandMapper = quoteCommandMapper;
+        this.quoteQueryService = quoteQueryService;
     }
 
     @PostMapping
@@ -70,7 +74,7 @@ public class QuoteController {
 
     @GetMapping("/{id}")
     public QuoteDetailResponse detail(@PathVariable String id) {
-        return quoteCommandService.detail(id);
+        return quoteQueryService.detail(id);
     }
 
     @GetMapping
@@ -79,7 +83,7 @@ public class QuoteController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String productCode
     ) {
-        return quoteCommandService.list(keyword, status, productCode);
+        return quoteQueryService.list(keyword, status, productCode);
     }
 }
 
