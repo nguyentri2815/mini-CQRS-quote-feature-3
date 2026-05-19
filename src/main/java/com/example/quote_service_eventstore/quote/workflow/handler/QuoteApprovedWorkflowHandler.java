@@ -1,0 +1,26 @@
+package com.example.quote_service_eventstore.quote.workflow.handler;
+
+import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
+import com.example.quote_service_eventstore.quote.workflow.QuoteSyncWorkflow;
+import org.springframework.stereotype.Component;
+
+@Component
+public class QuoteApprovedWorkflowHandler implements DomainEventHandler<QuoteApprovedEvent> {
+
+    private final QuoteSyncWorkflow quoteSyncWorkflow;
+
+    public QuoteApprovedWorkflowHandler(QuoteSyncWorkflow quoteSyncWorkflow) {
+        this.quoteSyncWorkflow = quoteSyncWorkflow;
+    }
+
+    @Override
+    public Class<QuoteApprovedEvent> eventType() {
+        return QuoteApprovedEvent.class;
+    }
+
+    @Override
+    public void handle(QuoteApprovedEvent event) {
+        quoteSyncWorkflow.onQuoteApproved(event);
+    }
+}
