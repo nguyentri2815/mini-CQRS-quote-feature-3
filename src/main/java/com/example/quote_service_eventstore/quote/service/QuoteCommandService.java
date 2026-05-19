@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.service;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventPublisher;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.common.exception.NotFoundException;
@@ -35,17 +36,21 @@ public class QuoteCommandService {
 
     private final EventStore eventStore;
     private final QuoteAggregateLoader quoteAggregateLoader;
-    private final QuoteStateProjectionHandler quoteStateProjectionHandler;
+//    private final QuoteStateProjectionHandler quoteStateProjectionHandler;
+    private final DomainEventPublisher eventPublisher;
 
     public QuoteCommandService(
             EventStore eventStore,
             QuoteAggregateLoader quoteAggregateLoader,
-            QuoteStateProjectionHandler quoteStateProjectionHandler
+//            QuoteStateProjectionHandler quoteStateProjectionHandler
+            DomainEventPublisher eventPublisher
     ) {
         this.eventStore = eventStore;
         this.quoteAggregateLoader = quoteAggregateLoader;
-        this.quoteStateProjectionHandler = quoteStateProjectionHandler;
+//        this.quoteStateProjectionHandler = quoteStateProjectionHandler;
+        this.eventPublisher = eventPublisher;
     }
+
 
     @Transactional
     public QuoteResponse create(CreateQuoteCommand command) {
@@ -57,7 +62,7 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        quoteStateProjectionHandler.project(event);
+        eventPublisher.publish(event);
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -75,7 +80,7 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        quoteStateProjectionHandler.project(event);
+        eventPublisher.publish(event);
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -93,7 +98,7 @@ public class QuoteCommandService {
 
         aggregate.apply(event);
 
-        quoteStateProjectionHandler.project(event);
+        eventPublisher.publish(event);
 
         return new QuoteResponse(
                 aggregate.getId(),
