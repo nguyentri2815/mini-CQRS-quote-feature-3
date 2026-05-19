@@ -3,6 +3,7 @@ package com.example.quote_service_eventstore.common.messaging;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.common.eventstore.EventDeserializer;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
+import com.example.quote_service_eventstore.common.messaging.dedup.MessageDedupService;
 import com.example.quote_service_eventstore.quote.domain.event.DomainEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,22 +19,36 @@ public class RabbitMqDomainEventConsumer {
 
     private final EventDeserializer eventDeserializer;
     private final List<DomainEventHandler<? extends DomainEvent>> handlers;
+    private final MessageDedupService messageDedupService;
 
     public RabbitMqDomainEventConsumer(
             EventDeserializer eventDeserializer,
-            List<DomainEventHandler<? extends DomainEvent>> handlers
+            List<DomainEventHandler<? extends DomainEvent>> handlers,
+            MessageDedupService messageDedupService
     ) {
         this.eventDeserializer = eventDeserializer;
         this.handlers = handlers;
+        this.messageDedupService = messageDedupService;
     }
 
     @RabbitListener(queues = DomainEventRabbitConfig.QUOTE_EVENT_QUEUE)
     public void consume(DomainEventMessage message) {
         log.info(
-                "[RABBIT_CONSUMER] Consuming event message. eventType={}, aggregateId={}",
+                "[RABBIT_CONSUMER] Consuming event message. messageId={}, eventType={}, aggregateId={}",
+                message.getEventId(),
                 message.getEventType(),
                 message.getAggregateId()
         );
+
+        if (messageDedupService.isProcessed(message.getEventId())) {
+            log.warn(
+                    "[RABBIT_CONSUMER] Duplicate message skipped. messageId={}, eventType={}, aggregateId={}",
+                    message.getEventId(),
+                    message.getEventType(),
+                    message.getAggregateId()
+            );
+            return;
+        }
 
         EventStoreRecord temporaryRecord = new EventStoreRecord(
                 message.getEventId(),
@@ -52,6 +67,7 @@ public class RabbitMqDomainEventConsumer {
                 dispatch(handler, event);
             }
         }
+        messageDedupService.markProcessed(message);
     }
 
     @SuppressWarnings("unchecked")

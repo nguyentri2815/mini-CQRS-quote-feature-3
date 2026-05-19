@@ -39,6 +39,10 @@ public class QuoteStateProjectionHandler {
     }
 
     private void onQuoteCreated(QuoteCreatedEvent event) {
+        if (quoteStateRepository.existsById(event.getQuoteId())) {
+            return;
+        }
+
         QuoteStateEntity entity = new QuoteStateEntity(
                 event.getQuoteId(),
                 event.getCustomerName(),
