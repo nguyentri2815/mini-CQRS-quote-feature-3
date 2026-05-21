@@ -1,7 +1,9 @@
 package com.example.quote_service_eventstore.quote.workflow.handler;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
+import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.workflow.QuoteSyncWorkflow;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +22,7 @@ public class QuoteCreatedWorkflowHandler implements DomainEventHandler<QuoteCrea
     }
 
     @Override
-    public void handle(QuoteCreatedEvent event) {
-        quoteSyncWorkflow.onQuoteCreated(event);
+    public void handle(DomainEventEnvelope<QuoteCreatedEvent> envelope) {
+        quoteSyncWorkflow.onQuoteCreated(envelope.getEvent());
     }
 }

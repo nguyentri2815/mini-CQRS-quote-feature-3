@@ -49,6 +49,7 @@ public class OutboxMessagePublisher {
                     outboxEvent.getAggregateType(),
                     outboxEvent.getEventType(),
                     outboxEvent.getPayload(),
+                    outboxEvent.getAggregateVersion(),
                     outboxEvent.getCreatedAt()
             );
 

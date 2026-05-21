@@ -55,12 +55,16 @@ public class OutboxEventEntity {
     protected OutboxEventEntity() {
     }
 
+    @Column(name = "aggregate_version", nullable = false)
+    private long aggregateVersion;
+
     public OutboxEventEntity(
             String id,
             String aggregateId,
             String aggregateType,
             String eventType,
             String payload,
+            long aggregateVersion,
             OutboxEventStatus status,
             int retryCount,
             String lastError,
@@ -72,12 +76,18 @@ public class OutboxEventEntity {
         this.aggregateType = aggregateType;
         this.eventType = eventType;
         this.payload = payload;
+        this.aggregateVersion = aggregateVersion;
         this.status = status;
         this.retryCount = retryCount;
         this.lastError = lastError;
         this.createdAt = createdAt;
         this.sentAt = sentAt;
     }
+
+    public long getAggregateVersion() {
+        return aggregateVersion;
+    }
+
 
     public String getId() {
         return id;

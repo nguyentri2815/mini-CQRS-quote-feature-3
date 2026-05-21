@@ -38,6 +38,7 @@ public class RabbitMqDomainEventPublisher implements DomainEventPublisher {
                 QUOTE_AGGREGATE_TYPE,
                 event.eventName(),
                 eventSerializer.serialize(event),
+                1,//test
                 event.occurredAt()
         );
 

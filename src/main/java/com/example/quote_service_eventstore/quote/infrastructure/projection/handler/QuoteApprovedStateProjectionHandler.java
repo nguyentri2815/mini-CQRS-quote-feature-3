@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.infrastructure.projection.handler;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
 import com.example.quote_service_eventstore.quote.infrastructure.projection.handler.QuoteStateProjectionHandler;
@@ -22,7 +23,11 @@ public class QuoteApprovedStateProjectionHandler implements DomainEventHandler<Q
     }
 
     @Override
-    public void handle(QuoteApprovedEvent event) {
-        quoteStateProjectionHandler.project(event);
+    public void handle(DomainEventEnvelope<QuoteApprovedEvent> envelope) {
+        quoteStateProjectionHandler.project(
+                envelope.getEvent(),
+                envelope.getAggregateVersion()
+        );
     }
 }
+

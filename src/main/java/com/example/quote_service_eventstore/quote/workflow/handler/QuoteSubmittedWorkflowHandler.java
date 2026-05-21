@@ -1,3 +1,6 @@
+package com.example.quote_service_eventstore.quote.workflow.handler;
+
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.workflow.QuoteSyncWorkflow;
@@ -18,7 +21,8 @@ public class QuoteSubmittedWorkflowHandler implements DomainEventHandler<QuoteSu
     }
 
     @Override
-    public void handle(QuoteSubmittedEvent event) {
-        quoteSyncWorkflow.onQuoteSubmitted(event);
+    public void handle(DomainEventEnvelope<QuoteSubmittedEvent> envelope) {
+        quoteSyncWorkflow.onQuoteSubmitted(envelope.getEvent());
     }
 }
+

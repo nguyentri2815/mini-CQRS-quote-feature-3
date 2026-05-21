@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.common.messaging;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.common.eventstore.EventDeserializer;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
@@ -34,10 +35,11 @@ public class RabbitMqDomainEventConsumer {
     @RabbitListener(queues = DomainEventRabbitConfig.QUOTE_EVENT_QUEUE)
     public void consume(DomainEventMessage message) {
         log.info(
-                "[RABBIT_CONSUMER] Consuming event message. messageId={}, eventType={}, aggregateId={}",
+                "[RABBIT_CONSUMER] Consuming event message. messageId={}, eventType={}, aggregateId={}, version={}",
                 message.getEventId(),
                 message.getEventType(),
-                message.getAggregateId()
+                message.getAggregateId(),
+                message.getAggregateVersion()
         );
 
         if (messageDedupService.isProcessed(message.getEventId())) {
@@ -56,7 +58,7 @@ public class RabbitMqDomainEventConsumer {
                 message.getAggregateType(),
                 message.getEventType(),
                 message.getPayload(),
-                0L,
+                message.getAggregateVersion(),
                 message.getOccurredAt()
         );
 
@@ -64,7 +66,7 @@ public class RabbitMqDomainEventConsumer {
 
         for (DomainEventHandler<? extends DomainEvent> handler : handlers) {
             if (handler.eventType().equals(event.getClass())) {
-                dispatch(handler, event);
+                dispatch(handler, event, message);
             }
         }
         messageDedupService.markProcessed(message);
@@ -73,9 +75,19 @@ public class RabbitMqDomainEventConsumer {
     @SuppressWarnings("unchecked")
     private <T extends DomainEvent> void dispatch(
             DomainEventHandler<? extends DomainEvent> handler,
-            DomainEvent event
+            DomainEvent event,
+            DomainEventMessage message
     ) {
         DomainEventHandler<T> typedHandler = (DomainEventHandler<T>) handler;
-        typedHandler.handle((T) event);
+        T typedEvent = (T) event;
+
+        DomainEventEnvelope<T> envelope = new DomainEventEnvelope<>(
+                message.getEventId(),
+                typedEvent,
+                message.getAggregateVersion()
+        );
+
+        typedHandler.handle(envelope);
     }
+
 }

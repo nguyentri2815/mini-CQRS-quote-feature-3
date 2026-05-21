@@ -9,6 +9,7 @@ public class DomainEventMessage {
     private String aggregateType;
     private String eventType;
     private String payload;
+    private long aggregateVersion;
     private LocalDateTime occurredAt;
 
     public DomainEventMessage() {
@@ -20,6 +21,7 @@ public class DomainEventMessage {
             String aggregateType,
             String eventType,
             String payload,
+            long aggregateVersion,
             LocalDateTime occurredAt
     ) {
         this.eventId = eventId;
@@ -27,6 +29,7 @@ public class DomainEventMessage {
         this.aggregateType = aggregateType;
         this.eventType = eventType;
         this.payload = payload;
+        this.aggregateVersion = aggregateVersion;
         this.occurredAt = occurredAt;
     }
 
@@ -48,6 +51,10 @@ public class DomainEventMessage {
 
     public String getPayload() {
         return payload;
+    }
+
+    public long getAggregateVersion() {
+        return aggregateVersion;
     }
 
     public LocalDateTime getOccurredAt() {

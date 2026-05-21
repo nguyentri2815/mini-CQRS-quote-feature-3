@@ -23,13 +23,14 @@ public class OutboxEventStore {
         this.eventSerializer = eventSerializer;
     }
 
-    public void save(DomainEvent event) {
+    public void save(DomainEvent event, long aggregateVersion) {
         OutboxEventEntity entity = new OutboxEventEntity(
                 UUID.randomUUID().toString(),
                 event.aggregateId(),
                 QUOTE_AGGREGATE_TYPE,
                 event.eventName(),
                 eventSerializer.serialize(event),
+                aggregateVersion,
                 OutboxEventStatus.PENDING,
                 0,
                 null,

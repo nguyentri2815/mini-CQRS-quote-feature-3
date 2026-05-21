@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.infrastructure.projection.handler;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,11 @@ public class QuoteSubmittedStateProjectionHandler implements DomainEventHandler<
     }
 
     @Override
-    public void handle(QuoteSubmittedEvent event) {
-        quoteStateProjectionHandler.project(event);
+    public void handle(DomainEventEnvelope<QuoteSubmittedEvent> envelope) {
+        quoteStateProjectionHandler.project(
+                envelope.getEvent(),
+                envelope.getAggregateVersion()
+        );
     }
+
 }

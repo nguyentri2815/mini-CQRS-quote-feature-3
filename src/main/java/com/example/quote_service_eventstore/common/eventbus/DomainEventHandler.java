@@ -6,5 +6,6 @@ public interface DomainEventHandler<T extends DomainEvent> {
 
     Class<T> eventType();
 
-    void handle(T event);
+    void handle(DomainEventEnvelope<T> envelope);
 }
+

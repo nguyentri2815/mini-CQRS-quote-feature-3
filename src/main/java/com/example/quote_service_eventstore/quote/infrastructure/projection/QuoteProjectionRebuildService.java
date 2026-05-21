@@ -35,7 +35,7 @@ public class QuoteProjectionRebuildService {
 
         for (EventStoreRecord record : eventStore.findAll()) {
             DomainEvent event = eventDeserializer.deserialize(record);
-            quoteStateProjectionHandler.project(event);
+            quoteStateProjectionHandler.project(event, record.getVersion());
         }
     }
 }

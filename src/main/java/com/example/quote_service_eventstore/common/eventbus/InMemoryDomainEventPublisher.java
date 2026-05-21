@@ -41,6 +41,15 @@ public class InMemoryDomainEventPublisher implements DomainEventPublisher {
             DomainEvent event
     ) {
         DomainEventHandler<T> typedHandler = (DomainEventHandler<T>) handler;
-        typedHandler.handle((T) event);
+        T typedEvent = (T) event;
+
+        DomainEventEnvelope<T> envelope = new DomainEventEnvelope<>(
+                event.aggregateId(),
+                typedEvent,
+                0L
+        );
+
+        typedHandler.handle(envelope);
+//        typedHandler.handle((T) event);
     }
 }

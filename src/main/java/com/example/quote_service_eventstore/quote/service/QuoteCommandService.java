@@ -2,6 +2,7 @@ package com.example.quote_service_eventstore.quote.service;
 
 import com.example.quote_service_eventstore.common.eventbus.DomainEventPublisher;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
+import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
 import com.example.quote_service_eventstore.common.exception.BusinessException;
 import com.example.quote_service_eventstore.common.exception.NotFoundException;
 import com.example.quote_service_eventstore.common.outbox.OutboxEventStore;
@@ -62,10 +63,8 @@ public class QuoteCommandService {
 
         QuoteCreatedEvent event = aggregate.create(command);
 
-        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-
-//        eventPublisher.publish(event);
-        outboxEventStore.save(event);
+        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+        outboxEventStore.save(event, record.getVersion());
 
         aggregate.apply(event);
 
@@ -81,8 +80,8 @@ public class QuoteCommandService {
 
         QuoteSubmittedEvent event = aggregate.submit(command);
 
-        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-        outboxEventStore.save(event);
+        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+        outboxEventStore.save(event, record.getVersion());
 
         aggregate.apply(event);
 
@@ -100,8 +99,8 @@ public class QuoteCommandService {
 
         QuoteApprovedEvent event = aggregate.approve(command);
 
-        eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-        outboxEventStore.save(event);
+        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+        outboxEventStore.save(event, record.getVersion());
 
         aggregate.apply(event);
 

@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.infrastructure.projection.handler;
 
+import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import org.slf4j.Logger;
@@ -17,12 +18,16 @@ public class QuoteSubmittedAuditHandler implements DomainEventHandler<QuoteSubmi
     }
 
     @Override
-    public void handle(QuoteSubmittedEvent event) {
+    public void handle(DomainEventEnvelope<QuoteSubmittedEvent> envelope) {
+        QuoteSubmittedEvent event = envelope.getEvent();
+        long version = envelope.getAggregateVersion();
+
         log.info(
-                "[AUDIT] Quote submitted. quoteId={}, submittedBy={}, occurredAt={}",
+                "[AUDIT] Quote submitted. quoteId={}, submittedBy={}, occurredAt={}, version{}",
                 event.getQuoteId(),
                 event.getSubmittedBy(),
-                event.occurredAt()
+                event.occurredAt(),
+                version
         );
     }
 }
