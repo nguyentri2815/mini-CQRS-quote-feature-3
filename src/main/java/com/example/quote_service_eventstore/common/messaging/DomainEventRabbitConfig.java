@@ -1,9 +1,6 @@
 package com.example.quote_service_eventstore.common.messaging;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -13,10 +10,13 @@ import org.springframework.context.annotation.Configuration;
 public class DomainEventRabbitConfig {
 
     public static final String DOMAIN_EVENT_EXCHANGE = "domain.event.exchange";
+    public static final String DOMAIN_EVENT_DLX = "domain.event.dlx";
 
     public static final String QUOTE_EVENT_QUEUE = "quote.event.queue";
+    public static final String QUOTE_EVENT_DLQ = "quote.event.dlq";
 
     public static final String QUOTE_EVENT_ROUTING_KEY = "quote.event";
+    public static final String QUOTE_EVENT_DLQ_ROUTING_KEY = "quote.event.dlq";
 
     @Bean
     public TopicExchange domainEventExchange() {
@@ -24,8 +24,24 @@ public class DomainEventRabbitConfig {
     }
 
     @Bean
+    public TopicExchange domainEventDeadLetterExchange() {
+        return new TopicExchange(DOMAIN_EVENT_DLX, true, false);
+    }
+
+    @Bean
     public Queue quoteEventQueue() {
-        return new Queue(QUOTE_EVENT_QUEUE, true);
+        return QueueBuilder
+                .durable(QUOTE_EVENT_QUEUE)
+                .deadLetterExchange(DOMAIN_EVENT_DLX)
+                .deadLetterRoutingKey(QUOTE_EVENT_DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue quoteEventDeadLetterQueue() {
+        return QueueBuilder
+                .durable(QUOTE_EVENT_DLQ)
+                .build();
     }
 
     @Bean
@@ -34,6 +50,14 @@ public class DomainEventRabbitConfig {
                 .bind(quoteEventQueue())
                 .to(domainEventExchange())
                 .with(QUOTE_EVENT_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding quoteEventDeadLetterBinding() {
+        return BindingBuilder
+                .bind(quoteEventDeadLetterQueue())
+                .to(domainEventDeadLetterExchange())
+                .with(QUOTE_EVENT_DLQ_ROUTING_KEY);
     }
 
     @Bean

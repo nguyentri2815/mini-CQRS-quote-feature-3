@@ -15,9 +15,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        
+
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          multiplier: 2
+          max-interval: 5000
+        default-requeue-rejected: false
+

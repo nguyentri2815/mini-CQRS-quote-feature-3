@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,7 +34,25 @@ public class RabbitMqDomainEventConsumer {
     }
 
     @RabbitListener(queues = DomainEventRabbitConfig.QUOTE_EVENT_QUEUE)
+    @Transactional
     public void consume(DomainEventMessage message) {
+        try {
+            process(message);
+        } catch (Exception exception) {
+            log.error(
+                    "[RABBIT_CONSUMER] Failed to process message. messageId={}, eventType={}, aggregateId={}, version={}",
+                    message.getEventId(),
+                    message.getEventType(),
+                    message.getAggregateId(),
+                    message.getAggregateVersion(),
+                    exception
+            );
+
+            throw exception;
+        }
+    }
+
+    private void process(DomainEventMessage message) {
         log.info(
                 "[RABBIT_CONSUMER] Consuming event message. messageId={}, eventType={}, aggregateId={}, version={}",
                 message.getEventId(),
@@ -89,5 +108,4 @@ public class RabbitMqDomainEventConsumer {
 
         typedHandler.handle(envelope);
     }
-
 }
