@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.api;
 
+import com.example.quote_service_eventstore.common.dto.PageResult;
 import com.example.quote_service_eventstore.quote.application.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
@@ -9,6 +10,7 @@ import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
 import com.example.quote_service_eventstore.quote.query.QuoteQueryService;
+import com.example.quote_service_eventstore.quote.query.QuoteSearchCriteria;
 import com.example.quote_service_eventstore.quote.query.QuoteSearchQueryService;
 import com.example.quote_service_eventstore.quote.service.QuoteCommandService;
 import com.example.quote_service_eventstore.quote.service.QuoteInMemoryService;
@@ -82,12 +84,22 @@ public class QuoteController {
     }
 
     @GetMapping
-    public List<QuoteListItemResponse> list(
+    public PageResult<QuoteListItemResponse> list(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String productCode
+            @RequestParam(required = false) String productCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        return quoteSearchQueryService.list(keyword, status, productCode);
+        QuoteSearchCriteria criteria = new QuoteSearchCriteria(
+                keyword,
+                status,
+                productCode,
+                page,
+                size
+        );
+
+        return quoteSearchQueryService.search(criteria);
     }
 }
 

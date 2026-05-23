@@ -1,9 +1,16 @@
 package com.example.quote_service_eventstore.quote.query;
 
+import com.example.quote_service_eventstore.common.dto.PageResult;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.infrastructure.search.document.QuoteDocument;
 import com.example.quote_service_eventstore.quote.infrastructure.search.mapper.QuoteSearchMapper;
 import com.example.quote_service_eventstore.quote.infrastructure.search.repository.QuoteSearchRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -13,56 +20,117 @@ import java.util.stream.StreamSupport;
 @Service
 public class QuoteSearchQueryService {
 
-    private final QuoteSearchRepository quoteSearchRepository;
+    private final ElasticsearchOperations elasticsearchOperations;
     private final QuoteSearchMapper quoteSearchMapper;
 
     public QuoteSearchQueryService(
-            QuoteSearchRepository quoteSearchRepository,
+            ElasticsearchOperations elasticsearchOperations,
             QuoteSearchMapper quoteSearchMapper
     ) {
-        this.quoteSearchRepository = quoteSearchRepository;
+        this.elasticsearchOperations = elasticsearchOperations;
         this.quoteSearchMapper = quoteSearchMapper;
     }
 
-    public List<QuoteListItemResponse> list(
-            String keyword,
-            String status,
-            String productCode
-    ) {
-        return StreamSupport.stream(quoteSearchRepository.findAll().spliterator(), false)
-                .filter(document -> matchKeyword(document, keyword))
-                .filter(document -> matchStatus(document, status))
-                .filter(document -> matchProductCode(document, productCode))
-                .sorted(Comparator.comparing(QuoteDocument::getCreatedAt).reversed())
+    public PageResult<QuoteListItemResponse> search(QuoteSearchCriteria criteria) {
+        int page = normalizePage(criteria.getPage());
+        int size = normalizeSize(criteria.getSize());
+
+        NativeQuery query = buildQuery(criteria, page, size);
+
+        SearchHits<QuoteDocument> hits = elasticsearchOperations.search(
+                query,
+                QuoteDocument.class
+        );
+
+        List<QuoteListItemResponse> items = hits.getSearchHits()
+                .stream()
+                .map(SearchHit::getContent)
                 .map(quoteSearchMapper::toListItemResponse)
                 .toList();
+
+        long totalElements = hits.getTotalHits();
+        int totalPages = calculateTotalPages(totalElements, size);
+
+        return new PageResult<>(
+                items,
+                page,
+                size,
+                totalElements,
+                totalPages
+        );
     }
 
-    private boolean matchKeyword(QuoteDocument document, String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            return true;
-        }
+    private NativeQuery buildQuery(
+            QuoteSearchCriteria criteria,
+            int page,
+            int size
+    ) {
+        return NativeQuery.builder()
+                .withQuery(q -> q.bool(bool -> {
+                    if (hasText(criteria.getKeyword())) {
+                        bool.must(must -> must.bool(keywordBool -> keywordBool
+                                .should(s -> s.match(match -> match
+                                        .field("customerName")
+                                        .query(criteria.getKeyword())
+                                ))
+                                .should(s -> s.term(term -> term
+                                        .field("productCode")
+                                        .value(criteria.getKeyword())
+                                ))
+                                .should(s -> s.term(term -> term
+                                        .field("id")
+                                        .value(criteria.getKeyword())
+                                ))
+                        ));
+                    }
 
-        String lowerKeyword = keyword.toLowerCase();
+                    if (hasText(criteria.getStatus())) {
+                        bool.filter(filter -> filter.term(term -> term
+                                .field("status")
+                                .value(criteria.getStatus())
+                        ));
+                    }
 
-        return document.getCustomerName().toLowerCase().contains(lowerKeyword)
-                || document.getProductCode().toLowerCase().contains(lowerKeyword)
-                || document.getId().toLowerCase().contains(lowerKeyword);
+                    if (hasText(criteria.getProductCode())) {
+                        bool.filter(filter -> filter.term(term -> term
+                                .field("productCode")
+                                .value(criteria.getProductCode())
+                        ));
+                    }
+
+                    return bool;
+                }))
+                .withPageable(
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by(Sort.Direction.DESC, "createdAt")
+                        )
+                )
+                .build();
     }
 
-    private boolean matchStatus(QuoteDocument document, String status) {
-        if (status == null || status.isBlank()) {
-            return true;
-        }
-
-        return document.getStatus().equalsIgnoreCase(status);
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
-    private boolean matchProductCode(QuoteDocument document, String productCode) {
-        if (productCode == null || productCode.isBlank()) {
-            return true;
+    private int normalizePage(int page) {
+        return Math.max(page, 0);
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return 10;
         }
 
-        return document.getProductCode().equalsIgnoreCase(productCode);
+        return Math.min(size, 100);
+    }
+
+    private int calculateTotalPages(long totalElements, int size) {
+        if (totalElements == 0) {
+            return 0;
+        }
+
+        return (int) Math.ceil((double) totalElements / size);
     }
 }
