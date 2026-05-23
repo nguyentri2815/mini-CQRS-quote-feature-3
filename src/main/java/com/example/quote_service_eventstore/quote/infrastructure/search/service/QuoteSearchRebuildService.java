@@ -32,4 +32,16 @@ public class QuoteSearchRebuildService {
             );
         }
     }
+
+    public void rebuildOne(String quoteId) {
+        quoteSearchRepository.deleteById(quoteId);
+
+        QuoteStateEntity entity = quoteStateRepository.findById(quoteId)
+                .orElseThrow(() -> new IllegalArgumentException("Quote state not found: " + quoteId));
+
+        quoteSearchRepository.save(
+                quoteSearchMapper.toDocument(entity)
+        );
+    }
+
 }

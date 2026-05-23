@@ -35,7 +35,26 @@ public class QuoteProjectionRebuildService {
 
         for (EventStoreRecord record : eventStore.findAll()) {
             DomainEvent event = eventDeserializer.deserialize(record);
-            quoteStateProjectionHandler.project(event, record.getVersion());
+
+            quoteStateProjectionHandler.project(
+                    event,
+                    record.getVersion()
+            );
         }
     }
+
+    @Transactional
+    public void rebuildOne(String quoteId) {
+        quoteStateRepository.deleteById(quoteId);
+
+        for (EventStoreRecord record : eventStore.findByAggregateId(quoteId)) {
+            DomainEvent event = eventDeserializer.deserialize(record);
+
+            quoteStateProjectionHandler.project(
+                    event,
+                    record.getVersion()
+            );
+        }
+    }
+
 }
