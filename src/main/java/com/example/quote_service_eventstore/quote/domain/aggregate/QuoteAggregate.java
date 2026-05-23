@@ -49,7 +49,7 @@ public class QuoteAggregate {
         return aggregate;
     }
 
-    public QuoteCreatedEvent create(CreateQuoteCommand command) {
+    public QuoteCreatedEvent process(CreateQuoteCommand command) {
         return new QuoteCreatedEvent(
                 UUID.randomUUID().toString(),
                 command.getCustomerName(),
@@ -60,7 +60,7 @@ public class QuoteAggregate {
         );
     }
 
-    public QuoteSubmittedEvent submit(SubmitQuoteCommand command) {
+    public QuoteSubmittedEvent process(SubmitQuoteCommand command) {
         if (this.status != QuoteStatus.DRAFT) {
             throw new BusinessException(
                     "Only DRAFT quote can be submitted. Current status: " + this.status
@@ -74,7 +74,7 @@ public class QuoteAggregate {
         );
     }
 
-    public QuoteApprovedEvent approve(ApproveQuoteCommand command) {
+    public QuoteApprovedEvent process(ApproveQuoteCommand command) {
         if (this.status != QuoteStatus.SUBMITTED) {
             throw new BusinessException(
                     "Only SUBMITTED quote can be approved. Current status: " + this.status

@@ -41,7 +41,7 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
     public AggregateCommandResult<QuoteAggregate> create(CreateQuoteCommand command) {
         QuoteAggregate aggregate = QuoteAggregate.empty();
 
-        QuoteCreatedEvent event = aggregate.create(command);
+        QuoteCreatedEvent event = aggregate.process(command);
 
         EventStoreRecord record = appendAndPublishLater(event);
 
@@ -62,7 +62,7 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
     ) {
         QuoteAggregate aggregate = quoteAggregateLoader.load(quoteId);
 
-        QuoteSubmittedEvent event = aggregate.submit(command);
+        QuoteSubmittedEvent event = aggregate.process(command);
 
         EventStoreRecord record = appendAndPublishLater(event);
 
@@ -83,7 +83,7 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
     ) {
         QuoteAggregate aggregate = quoteAggregateLoader.load(quoteId);
 
-        QuoteApprovedEvent event = aggregate.approve(command);
+        QuoteApprovedEvent event = aggregate.process(command);
 
         EventStoreRecord record = appendAndPublishLater(event);
 
@@ -110,4 +110,29 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
 
         return record;
     }
+
+    private AggregateCommandResult<QuoteAggregate> commit(
+            QuoteAggregate aggregate,
+            DomainEvent event
+    ) {
+        EventStoreRecord record = eventStore.append(
+                QUOTE_AGGREGATE_TYPE,
+                event
+        );
+
+        outboxEventStore.save(
+                event,
+                record.getVersion()
+        );
+
+        aggregate.apply(event);
+
+        return new AggregateCommandResult<>(
+                aggregate.getId(),
+                record.getVersion(),
+                aggregate,
+                List.of(event)
+        );
+    }
+
 }
