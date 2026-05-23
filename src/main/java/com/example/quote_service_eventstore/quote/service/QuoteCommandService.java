@@ -1,6 +1,7 @@
 package com.example.quote_service_eventstore.quote.service;
 
 import com.example.quote_service_eventstore.common.eventbus.DomainEventPublisher;
+import com.example.quote_service_eventstore.common.eventsource.AggregateCommandResult;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
 import com.example.quote_service_eventstore.common.exception.BusinessException;
@@ -10,6 +11,7 @@ import com.example.quote_service_eventstore.quote.application.command.ApproveQuo
 import com.example.quote_service_eventstore.quote.application.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.command.SubmitQuoteCommand;
 import com.example.quote_service_eventstore.quote.application.mapper.QuoteAggregateMapper;
+import com.example.quote_service_eventstore.quote.application.repository.QuoteAggregateRepository;
 import com.example.quote_service_eventstore.quote.domain.aggregate.QuoteAggregate;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
@@ -34,39 +36,53 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class QuoteCommandService {
 
-    private static final String QUOTE_AGGREGATE_TYPE = "Quote";
+//    private static final String QUOTE_AGGREGATE_TYPE = "Quote";
 
-    private final EventStore eventStore;
-    private final QuoteAggregateLoader quoteAggregateLoader;
+//    private final EventStore eventStore;
+//    private final QuoteAggregateLoader quoteAggregateLoader;
 //    private final QuoteStateProjectionHandler quoteStateProjectionHandler;
 //    private final DomainEventPublisher eventPublisher;
-    private final OutboxEventStore outboxEventStore;
+//    private final OutboxEventStore outboxEventStore;
+
+
+    private final QuoteAggregateRepository quoteAggregateRepository;
 
     public QuoteCommandService(
-            EventStore eventStore,
-            QuoteAggregateLoader quoteAggregateLoader,
+            QuoteAggregateRepository quoteAggregateRepository
+    ) {
+        this.quoteAggregateRepository = quoteAggregateRepository;
+    }
+
+//    public QuoteCommandService(
+//            EventStore eventStore,
+//            QuoteAggregateLoader quoteAggregateLoader,
 //            QuoteStateProjectionHandler quoteStateProjectionHandler
 //            DomainEventPublisher eventPublisher
-            OutboxEventStore outboxEventStore
-    ) {
-        this.eventStore = eventStore;
-        this.quoteAggregateLoader = quoteAggregateLoader;
+//            OutboxEventStore outboxEventStore
+//    ) {
+//        this.eventStore = eventStore;
+//        this.quoteAggregateLoader = quoteAggregateLoader;
 //        this.quoteStateProjectionHandler = quoteStateProjectionHandler;
 //        this.eventPublisher = eventPublisher;
-        this.outboxEventStore = outboxEventStore;
-    }
+//        this.outboxEventStore = outboxEventStore;
+//    }
 
 
     @Transactional
     public QuoteResponse create(CreateQuoteCommand command) {
-        QuoteAggregate aggregate = QuoteAggregate.empty();
+//        QuoteAggregate aggregate = QuoteAggregate.empty();
+//
+//        QuoteCreatedEvent event = aggregate.create(command);
+//
+//        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+//        outboxEventStore.save(event, record.getVersion());
+//
+//        aggregate.apply(event);
 
-        QuoteCreatedEvent event = aggregate.create(command);
+        AggregateCommandResult<QuoteAggregate> result =
+                quoteAggregateRepository.create(command);
 
-        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-        outboxEventStore.save(event, record.getVersion());
-
-        aggregate.apply(event);
+        QuoteAggregate aggregate = result.getAggregate();
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -76,16 +92,23 @@ public class QuoteCommandService {
 
     @Transactional
     public QuoteResponse submit(SubmitQuoteCommand command) {
-        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
-
-        QuoteSubmittedEvent event = aggregate.submit(command);
-
-        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-        outboxEventStore.save(event, record.getVersion());
-
-        aggregate.apply(event);
+//        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
+//
+//        QuoteSubmittedEvent event = aggregate.submit(command);
+//
+//        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+//        outboxEventStore.save(event, record.getVersion());
+//
+//        aggregate.apply(event);
 
 //        eventPublisher.publish(event);
+        AggregateCommandResult<QuoteAggregate> result =
+                quoteAggregateRepository.update(
+                        command.getQuoteId(),
+                        command
+                );
+
+        QuoteAggregate aggregate = result.getAggregate();
 
         return new QuoteResponse(
                 aggregate.getId(),
@@ -95,16 +118,23 @@ public class QuoteCommandService {
 
     @Transactional
     public QuoteResponse approve(ApproveQuoteCommand command) {
-        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
-
-        QuoteApprovedEvent event = aggregate.approve(command);
-
-        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
-        outboxEventStore.save(event, record.getVersion());
-
-        aggregate.apply(event);
+//        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
+//
+//        QuoteApprovedEvent event = aggregate.approve(command);
+//
+//        EventStoreRecord record = eventStore.append(QUOTE_AGGREGATE_TYPE, event);
+//        outboxEventStore.save(event, record.getVersion());
+//
+//        aggregate.apply(event);
 
 //        eventPublisher.publish(event);
+        AggregateCommandResult<QuoteAggregate> result =
+                quoteAggregateRepository.update(
+                        command.getQuoteId(),
+                        command
+                );
+
+        QuoteAggregate aggregate = result.getAggregate();
 
         return new QuoteResponse(
                 aggregate.getId(),
