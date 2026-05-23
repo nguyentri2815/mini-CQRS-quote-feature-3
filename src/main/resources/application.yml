@@ -32,3 +32,5 @@ spring:
           max-interval: 5000
         default-requeue-rejected: false
 
+  elasticsearch:
+    uris: http://localhost:9200

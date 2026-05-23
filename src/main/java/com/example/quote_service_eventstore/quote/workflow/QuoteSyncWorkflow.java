@@ -5,7 +5,7 @@ import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.infrastructure.allocation.QuoteAllocationGateway;
 import com.example.quote_service_eventstore.quote.infrastructure.notification.QuoteNotificationService;
-import com.example.quote_service_eventstore.quote.infrastructure.search.QuoteIndexService;
+import com.example.quote_service_eventstore.quote.infrastructure.search.service.QuoteIndexService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

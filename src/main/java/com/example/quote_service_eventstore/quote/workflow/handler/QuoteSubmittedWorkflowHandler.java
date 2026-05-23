@@ -4,9 +4,11 @@ import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.quote.workflow.QuoteSyncWorkflow;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(200)
 public class QuoteSubmittedWorkflowHandler implements DomainEventHandler<QuoteSubmittedEvent> {
 
     private final QuoteSyncWorkflow quoteSyncWorkflow;

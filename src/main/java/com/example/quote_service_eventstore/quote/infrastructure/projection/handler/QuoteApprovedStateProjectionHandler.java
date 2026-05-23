@@ -4,9 +4,11 @@ import com.example.quote_service_eventstore.common.eventbus.DomainEventEnvelope;
 import com.example.quote_service_eventstore.common.eventbus.DomainEventHandler;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
 import com.example.quote_service_eventstore.quote.infrastructure.projection.handler.QuoteStateProjectionHandler;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(100)
 public class QuoteApprovedStateProjectionHandler implements DomainEventHandler<QuoteApprovedEvent> {
 
     private final QuoteStateProjectionHandler quoteStateProjectionHandler;

@@ -9,6 +9,7 @@ import com.example.quote_service_eventstore.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteListItemResponse;
 import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
 import com.example.quote_service_eventstore.quote.query.QuoteQueryService;
+import com.example.quote_service_eventstore.quote.query.QuoteSearchQueryService;
 import com.example.quote_service_eventstore.quote.service.QuoteCommandService;
 import com.example.quote_service_eventstore.quote.service.QuoteInMemoryService;
 import jakarta.validation.Valid;
@@ -25,15 +26,18 @@ public class QuoteController {
     private final QuoteCommandService quoteCommandService;
     private final QuoteCommandMapper quoteCommandMapper;
     private final QuoteQueryService quoteQueryService;
+    private final QuoteSearchQueryService quoteSearchQueryService;
 
     public QuoteController(
             QuoteCommandService quoteCommandService,
             QuoteCommandMapper quoteCommandMapper,
-            QuoteQueryService quoteQueryService
+            QuoteQueryService quoteQueryService,
+            QuoteSearchQueryService quoteSearchQueryService
     ) {
         this.quoteCommandService = quoteCommandService;
         this.quoteCommandMapper = quoteCommandMapper;
         this.quoteQueryService = quoteQueryService;
+        this.quoteSearchQueryService = quoteSearchQueryService;
     }
 
     @PostMapping
@@ -83,7 +87,7 @@ public class QuoteController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String productCode
     ) {
-        return quoteQueryService.list(keyword, status, productCode);
+        return quoteSearchQueryService.list(keyword, status, productCode);
     }
 }
 

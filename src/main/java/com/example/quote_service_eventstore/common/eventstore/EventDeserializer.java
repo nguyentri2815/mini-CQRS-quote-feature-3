@@ -4,9 +4,9 @@ import com.example.quote_service_eventstore.quote.domain.event.DomainEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteApprovedEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteCreatedEvent;
 import com.example.quote_service_eventstore.quote.domain.event.QuoteSubmittedEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class EventDeserializer {
@@ -34,7 +34,7 @@ public class EventDeserializer {
                                 "Unsupported event type: " + record.getEventType()
                         );
             };
-        } catch (JacksonException exception) {
+        } catch (JsonProcessingException exception) {
             throw new IllegalStateException(
                     "Failed to deserialize event. eventType=" + record.getEventType(),
                     exception
