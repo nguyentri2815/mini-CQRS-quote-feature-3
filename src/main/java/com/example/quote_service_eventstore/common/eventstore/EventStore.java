@@ -8,6 +8,12 @@ public interface EventStore {
 
     EventStoreRecord append(String aggregateType, DomainEvent event);
 
+    EventStoreRecord append(
+            String aggregateType,
+            DomainEvent event,
+            long expectedVersion
+    );
+
     List<EventStoreRecord> findByAggregateId(String aggregateId);
 
     List<EventStoreRecord> findAll();

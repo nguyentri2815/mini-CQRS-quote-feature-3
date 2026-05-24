@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.quote.service;
 
+import com.example.quote_service_eventstore.common.eventsource.LoadedAggregate;
 import com.example.quote_service_eventstore.common.eventstore.EventDeserializer;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
@@ -25,6 +26,10 @@ public class QuoteAggregateLoader {
     }
 
     public QuoteAggregate load(String quoteId) {
+        return loadWithVersion(quoteId).getAggregate();
+    }
+
+    public LoadedAggregate<QuoteAggregate> loadWithVersion(String quoteId) {
         List<EventStoreRecord> records = eventStore.findByAggregateId(quoteId);
 
         if (records.isEmpty()) {
@@ -33,11 +38,17 @@ public class QuoteAggregateLoader {
 
         QuoteAggregate aggregate = QuoteAggregate.empty();
 
+        long currentVersion = 0L;
+
         for (EventStoreRecord record : records) {
             DomainEvent event = eventDeserializer.deserialize(record);
             aggregate.apply(event);
+            currentVersion = record.getVersion();
         }
 
-        return aggregate;
+        return new LoadedAggregate<>(
+                aggregate,
+                currentVersion
+        );
     }
 }

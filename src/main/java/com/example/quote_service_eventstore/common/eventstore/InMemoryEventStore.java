@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.common.eventstore;
 
+import com.example.quote_service_eventstore.common.exception.ConcurrencyException;
 import com.example.quote_service_eventstore.quote.domain.event.DomainEvent;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +39,29 @@ public class InMemoryEventStore implements EventStore {
         records.add(record);
 
         return record;
+    }
+
+    @Override
+    public EventStoreRecord append(
+            String aggregateType,
+            DomainEvent event,
+            long expectedVersion
+    ) {
+        long currentVersion = records.stream()
+                .filter(record -> record.getAggregateId().equals(event.aggregateId()))
+                .mapToLong(EventStoreRecord::getVersion)
+                .max()
+                .orElse(0L);
+
+        if (currentVersion != expectedVersion) {
+            throw new ConcurrencyException(
+                    "Aggregate version conflict. aggregateId=" + event.aggregateId()
+                            + ", expectedVersion=" + expectedVersion
+                            + ", currentVersion=" + currentVersion
+            );
+        }
+
+        return append(aggregateType, event);
     }
 
     @Override

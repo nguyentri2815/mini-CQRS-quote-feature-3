@@ -1,6 +1,7 @@
 package com.example.quote_service_eventstore.quote.infrastructure.eventsource;
 
 import com.example.quote_service_eventstore.common.eventsource.AggregateCommandResult;
+import com.example.quote_service_eventstore.common.eventsource.LoadedAggregate;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
 import com.example.quote_service_eventstore.common.outbox.OutboxEventStore;
@@ -43,15 +44,10 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
 
         QuoteCreatedEvent event = aggregate.process(command);
 
-        EventStoreRecord record = appendAndPublishLater(event);
-
-        aggregate.apply(event);
-
-        return new AggregateCommandResult<>(
-                aggregate.getId(),
-                record.getVersion(),
+        return commit(
                 aggregate,
-                List.of(event)
+                event,
+                0L
         );
     }
 
@@ -60,19 +56,18 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
             String quoteId,
             SubmitQuoteCommand command
     ) {
-        QuoteAggregate aggregate = quoteAggregateLoader.load(quoteId);
+        LoadedAggregate<QuoteAggregate> loadedAggregate =
+                quoteAggregateLoader.loadWithVersion(quoteId);
+
+        QuoteAggregate aggregate = loadedAggregate.getAggregate();
+        long expectedVersion = loadedAggregate.getVersion();
 
         QuoteSubmittedEvent event = aggregate.process(command);
 
-        EventStoreRecord record = appendAndPublishLater(event);
-
-        aggregate.apply(event);
-
-        return new AggregateCommandResult<>(
-                aggregate.getId(),
-                record.getVersion(),
+        return commit(
                 aggregate,
-                List.of(event)
+                event,
+                expectedVersion
         );
     }
 
@@ -81,43 +76,30 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
             String quoteId,
             ApproveQuoteCommand command
     ) {
-        QuoteAggregate aggregate = quoteAggregateLoader.load(quoteId);
+        LoadedAggregate<QuoteAggregate> loadedAggregate =
+                quoteAggregateLoader.loadWithVersion(quoteId);
+
+        QuoteAggregate aggregate = loadedAggregate.getAggregate();
+        long expectedVersion = loadedAggregate.getVersion();
 
         QuoteApprovedEvent event = aggregate.process(command);
 
-        EventStoreRecord record = appendAndPublishLater(event);
-
-        aggregate.apply(event);
-
-        return new AggregateCommandResult<>(
-                aggregate.getId(),
-                record.getVersion(),
+        return commit(
                 aggregate,
-                List.of(event)
-        );
-    }
-
-    private EventStoreRecord appendAndPublishLater(DomainEvent event) {
-        EventStoreRecord record = eventStore.append(
-                QUOTE_AGGREGATE_TYPE,
-                event
-        );
-
-        outboxEventStore.save(
                 event,
-                record.getVersion()
+                expectedVersion
         );
-
-        return record;
     }
 
     private AggregateCommandResult<QuoteAggregate> commit(
             QuoteAggregate aggregate,
-            DomainEvent event
+            DomainEvent event,
+            long expectedVersion
     ) {
         EventStoreRecord record = eventStore.append(
                 QUOTE_AGGREGATE_TYPE,
-                event
+                event,
+                expectedVersion
         );
 
         outboxEventStore.save(
@@ -134,5 +116,4 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
                 List.of(event)
         );
     }
-
 }

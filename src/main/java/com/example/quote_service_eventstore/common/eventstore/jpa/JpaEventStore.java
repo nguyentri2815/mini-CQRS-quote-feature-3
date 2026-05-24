@@ -3,8 +3,10 @@ package com.example.quote_service_eventstore.common.eventstore.jpa;
 import com.example.quote_service_eventstore.common.eventstore.EventSerializer;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
+import com.example.quote_service_eventstore.common.exception.ConcurrencyException;
 import com.example.quote_service_eventstore.quote.domain.event.DomainEvent;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -28,7 +30,32 @@ public class JpaEventStore implements EventStore {
 
     @Override
     public EventStoreRecord append(String aggregateType, DomainEvent event) {
-        long nextVersion = nextVersion(event.aggregateId());
+        long expectedVersion = currentVersion(event.aggregateId());
+
+        return append(
+                aggregateType,
+                event,
+                expectedVersion
+        );
+    }
+
+    @Override
+    public EventStoreRecord append(
+            String aggregateType,
+            DomainEvent event,
+            long expectedVersion
+    ) {
+        long currentVersion = currentVersion(event.aggregateId());
+
+        if (currentVersion != expectedVersion) {
+            throw new ConcurrencyException(
+                    "Aggregate version conflict. aggregateId=" + event.aggregateId()
+                            + ", expectedVersion=" + expectedVersion
+                            + ", currentVersion=" + currentVersion
+            );
+        }
+
+        long nextVersion = expectedVersion + 1;
 
         EventStoreEntity entity = new EventStoreEntity(
                 UUID.randomUUID().toString(),
@@ -40,10 +67,24 @@ public class JpaEventStore implements EventStore {
                 LocalDateTime.now()
         );
 
-        EventStoreEntity savedEntity = eventStoreJpaRepository.save(entity);
-
-        return toRecord(savedEntity);
+        try {
+            EventStoreEntity savedEntity = eventStoreJpaRepository.saveAndFlush(entity);
+            return toRecord(savedEntity);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ConcurrencyException(
+                    "Aggregate version conflict while appending event. aggregateId="
+                            + event.aggregateId()
+                            + ", version=" + nextVersion,
+                    exception
+            );
+        }
     }
+
+    private long currentVersion(String aggregateId) {
+        return eventStoreJpaRepository.findMaxVersionByAggregateId(aggregateId)
+                .orElse(0L);
+    }
+
 
     @Override
     public List<EventStoreRecord> findByAggregateId(String aggregateId) {
