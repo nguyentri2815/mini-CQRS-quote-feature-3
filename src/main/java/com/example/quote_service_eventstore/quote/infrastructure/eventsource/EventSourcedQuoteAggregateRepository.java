@@ -1,6 +1,7 @@
 package com.example.quote_service_eventstore.quote.infrastructure.eventsource;
 
 import com.example.quote_service_eventstore.common.eventsource.AggregateCommandResult;
+import com.example.quote_service_eventstore.common.eventsource.EventAppendResult;
 import com.example.quote_service_eventstore.common.eventsource.LoadedAggregate;
 import com.example.quote_service_eventstore.common.eventstore.EventStore;
 import com.example.quote_service_eventstore.common.eventstore.EventStoreRecord;
@@ -60,14 +61,14 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
                 quoteAggregateLoader.loadWithVersion(quoteId);
 
         QuoteAggregate aggregate = loadedAggregate.getAggregate();
-        long expectedVersion = loadedAggregate.getVersion();
+        long oldVersion = loadedAggregate.getVersion();
 
         QuoteSubmittedEvent event = aggregate.process(command);
 
         return commit(
                 aggregate,
                 event,
-                expectedVersion
+                oldVersion
         );
     }
 
@@ -80,26 +81,26 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
                 quoteAggregateLoader.loadWithVersion(quoteId);
 
         QuoteAggregate aggregate = loadedAggregate.getAggregate();
-        long expectedVersion = loadedAggregate.getVersion();
+        long oldVersion = loadedAggregate.getVersion();
 
         QuoteApprovedEvent event = aggregate.process(command);
 
         return commit(
                 aggregate,
                 event,
-                expectedVersion
+                oldVersion
         );
     }
 
     private AggregateCommandResult<QuoteAggregate> commit(
             QuoteAggregate aggregate,
             DomainEvent event,
-            long expectedVersion
+            long oldVersion
     ) {
         EventStoreRecord record = eventStore.append(
                 QUOTE_AGGREGATE_TYPE,
                 event,
-                expectedVersion
+                oldVersion
         );
 
         outboxEventStore.save(
@@ -109,11 +110,21 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
 
         aggregate.apply(event);
 
+        EventAppendResult appendResult = new EventAppendResult(
+                event.aggregateId(),
+                oldVersion,
+                record.getVersion(),
+                event,
+                record
+        );
+
         return new AggregateCommandResult<>(
                 aggregate.getId(),
+                oldVersion,
                 record.getVersion(),
                 aggregate,
-                List.of(event)
+                List.of(event),
+                List.of(appendResult)
         );
     }
 }

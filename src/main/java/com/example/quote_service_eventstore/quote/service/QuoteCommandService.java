@@ -22,6 +22,8 @@ import com.example.quote_service_eventstore.quote.dto.QuoteResponse;
 import com.example.quote_service_eventstore.quote.infrastructure.projection.handler.QuoteStateProjectionHandler;
 import com.example.quote_service_eventstore.quote.model.Quote;
 import com.example.quote_service_eventstore.quote.model.QuoteStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,7 @@ public class QuoteCommandService {
 //    private final DomainEventPublisher eventPublisher;
 //    private final OutboxEventStore outboxEventStore;
 
+    private static final Logger log = LoggerFactory.getLogger(QuoteCommandService.class);
 
     private final QuoteAggregateRepository quoteAggregateRepository;
 
@@ -82,6 +85,14 @@ public class QuoteCommandService {
         AggregateCommandResult<QuoteAggregate> result =
                 quoteAggregateRepository.create(command);
 
+        log.info(
+                "[COMMAND_RESULT] Create quote completed. aggregateId={}, oldVersion={}, newVersion={}, events={}",
+                result.getAggregateId(),
+                result.getOldVersion(),
+                result.getNewVersion(),
+                result.getEventNames()
+        );
+
         QuoteAggregate aggregate = result.getAggregate();
 
         return new QuoteResponse(
@@ -108,12 +119,24 @@ public class QuoteCommandService {
                         command
                 );
 
-        QuoteAggregate aggregate = result.getAggregate();
+//        log.info(
+//                "[COMMAND_RESULT] Submit quote completed. aggregateId={}, oldVersion={}, newVersion={}, events={}",
+//                result.getAggregateId(),
+//                result.getOldVersion(),
+//                result.getNewVersion(),
+//                result.getEventNames()
+//        );
+//
+//        QuoteAggregate aggregate = result.getAggregate();
+//
+//        return new QuoteResponse(
+//                aggregate.getId(),
+//                aggregate.getStatus().name()
+//        );
+        logCommandResult("Submit quote completed", result);
 
-        return new QuoteResponse(
-                aggregate.getId(),
-                aggregate.getStatus().name()
-        );
+        return toResponse(result);
+
     }
 
     @Transactional
@@ -134,11 +157,44 @@ public class QuoteCommandService {
                         command
                 );
 
+        log.info(
+                "[COMMAND_RESULT] Approve quote completed. aggregateId={}, oldVersion={}, newVersion={}, events={}",
+                result.getAggregateId(),
+                result.getOldVersion(),
+                result.getNewVersion(),
+                result.getEventNames()
+        );
+
         QuoteAggregate aggregate = result.getAggregate();
 
         return new QuoteResponse(
                 aggregate.getId(),
                 aggregate.getStatus().name()
+        );
+    }
+
+    private QuoteResponse toResponse(
+            AggregateCommandResult<QuoteAggregate> result
+    ) {
+        QuoteAggregate aggregate = result.getAggregate();
+
+        return new QuoteResponse(
+                aggregate.getId(),
+                aggregate.getStatus().name()
+        );
+    }
+
+    private void logCommandResult(
+            String message,
+            AggregateCommandResult<QuoteAggregate> result
+    ) {
+        log.info(
+                "[COMMAND_RESULT] {}. aggregateId={}, oldVersion={}, newVersion={}, events={}",
+                message,
+                result.getAggregateId(),
+                result.getOldVersion(),
+                result.getNewVersion(),
+                result.getEventNames()
         );
     }
 
@@ -179,13 +235,13 @@ public class QuoteCommandService {
 //
 //        return quote;
 //    }
-
-    private QuoteResponse toResponse(Quote quote) {
-        return new QuoteResponse(
-                quote.getId(),
-                quote.getStatus().name()
-        );
-    }
+//
+//    private QuoteResponse toResponse(Quote quote) {
+//        return new QuoteResponse(
+//                quote.getId(),
+//                quote.getStatus().name()
+//        );
+//    }
 
     private QuoteListItemResponse toListItemResponse(Quote quote) {
         return new QuoteListItemResponse(
