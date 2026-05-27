@@ -70,6 +70,11 @@ public class QuoteStateProjectionHandler {
                 aggregateVersion
         );
 
+        entity.setTenantId(event.getTenantId());
+        entity.setOrganizationId(event.getOrganizationId());
+        entity.setCreatedBy(event.getCreatedBy());
+        entity.setCreatedByName(event.getCreatedByName());
+
         quoteStateRepository.save(entity);
     }
 
@@ -83,6 +88,8 @@ public class QuoteStateProjectionHandler {
         entity.setStatus(QuoteStatus.SUBMITTED);
         entity.setUpdatedAt(event.occurredAt());
         entity.setLastProjectedVersion(aggregateVersion);
+        entity.setSubmittedBy(event.getSubmittedBy());
+        entity.setSubmittedByName(event.getSubmittedByName());
 
         quoteStateRepository.save(entity);
     }

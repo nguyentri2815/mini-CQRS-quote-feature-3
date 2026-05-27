@@ -23,6 +23,10 @@ public class QuoteAggregate {
     private QuoteStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String tenantId;
+    private String organizationId;
+    private String createdBy;
+    private String createdByName;
 
     public static QuoteAggregate empty() {
         return new QuoteAggregate();
@@ -56,6 +60,9 @@ public class QuoteAggregate {
                 command.getProductCode(),
                 command.getPremium(),
                 command.getCreatedBy(),
+                command.getCreatedByName(),
+                command.getTenantId(),
+                command.getOrganizationId(),
                 LocalDateTime.now()
         );
     }
@@ -70,6 +77,9 @@ public class QuoteAggregate {
         return new QuoteSubmittedEvent(
                 this.id,
                 command.getSubmittedBy(),
+                command.getSubmittedByName(),
+                command.getTenantId(),
+                command.getOrganizationId(),
                 LocalDateTime.now()
         );
     }
@@ -84,6 +94,9 @@ public class QuoteAggregate {
         return new QuoteApprovedEvent(
                 this.id,
                 command.getApprovedBy(),
+                command.getApprovedByName(),
+                command.getTenantId(),
+                command.getOrganizationId(),
                 LocalDateTime.now()
         );
     }
@@ -94,9 +107,14 @@ public class QuoteAggregate {
         this.productCode = event.getProductCode();
         this.premium = event.getPremium();
         this.status = QuoteStatus.DRAFT;
+        this.createdBy = event.getCreatedBy();
+        this.createdByName = event.getCreatedByName();
+        this.tenantId = event.getTenantId();
+        this.organizationId = event.getOrganizationId();
         this.createdAt = event.occurredAt();
         this.updatedAt = event.occurredAt();
     }
+
 
     public void apply(QuoteSubmittedEvent event) {
         this.status = QuoteStatus.SUBMITTED;
@@ -155,6 +173,13 @@ public class QuoteAggregate {
         return updatedAt;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
+    }
 
 }
 

@@ -11,6 +11,9 @@ public class QuoteDetailResponse {
     private BigDecimal premium;
     private String status;
     private List<String> availableActions;
+//    private final String createdByName;
+//    private final String submittedByName;
+//    private final String approvedByName;
 
     public QuoteDetailResponse(
             String id,

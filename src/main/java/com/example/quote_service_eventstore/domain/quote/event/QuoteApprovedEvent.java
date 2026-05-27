@@ -4,46 +4,27 @@ import java.time.LocalDateTime;
 
 public class QuoteApprovedEvent implements DomainEvent {
 
-    private String quoteId;
-    private String approvedBy;
-    private LocalDateTime occurredAt;
-
-    public QuoteApprovedEvent() {
-    }
+    private final String quoteId;
+    private final String approvedBy;
+    private final String approvedByName;
+    private final String tenantId;
+    private final String organizationId;
+    private final LocalDateTime occurredAt;
 
     public QuoteApprovedEvent(
             String quoteId,
             String approvedBy,
+            String approvedByName,
+            String tenantId,
+            String organizationId,
             LocalDateTime occurredAt
     ) {
         this.quoteId = quoteId;
         this.approvedBy = approvedBy;
+        this.approvedByName = approvedByName;
+        this.tenantId = tenantId;
+        this.organizationId = organizationId;
         this.occurredAt = occurredAt;
-    }
-
-    public String getQuoteId() {
-        return quoteId;
-    }
-
-    public void setQuoteId(String quoteId) {
-        this.quoteId = quoteId;
-    }
-
-    public String getApprovedBy() {
-        return approvedBy;
-    }
-
-    public void setApprovedBy(String approvedBy) {
-        this.approvedBy = approvedBy;
-    }
-
-    public void setOccurredAt(LocalDateTime occurredAt) {
-        this.occurredAt = occurredAt;
-    }
-
-    @Override
-    public String eventName() {
-        return "QuoteApprovedEvent";
     }
 
     @Override
@@ -52,7 +33,32 @@ public class QuoteApprovedEvent implements DomainEvent {
     }
 
     @Override
+    public String eventName() {
+        return "QuoteApprovedEvent";
+    }
+
+    @Override
     public LocalDateTime occurredAt() {
         return occurredAt;
+    }
+
+    public String getQuoteId() {
+        return quoteId;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public String getApprovedByName() {
+        return approvedByName;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
     }
 }

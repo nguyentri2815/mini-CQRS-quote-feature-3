@@ -7,6 +7,8 @@ import com.example.quote_service_eventstore.command.quote.application.mapper.Quo
 import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCreateRequest;
 import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCommandResponse;
 import com.example.quote_service_eventstore.command.quote.application.service.QuoteCommandService;
+import com.example.quote_service_eventstore.shared.security.CurrentUser;
+import com.example.quote_service_eventstore.shared.security.CurrentUserContext;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,18 +18,21 @@ public class QuoteCommandController {
 
     private final QuoteCommandService quoteCommandService;
     private final QuoteCommandMapper quoteCommandMapper;
+    private final CurrentUserContext currentUserContext;
 
     public QuoteCommandController(
             QuoteCommandService quoteCommandService,
-            QuoteCommandMapper quoteCommandMapper
+            QuoteCommandMapper quoteCommandMapper,
+            CurrentUserContext currentUserContext
     ) {
         this.quoteCommandService = quoteCommandService;
         this.quoteCommandMapper = quoteCommandMapper;
+        this.currentUserContext = currentUserContext;
     }
 
     @PostMapping
     public QuoteCommandResponse create(@Valid @RequestBody QuoteCreateRequest request) {
-        String currentUser = "demo-user";
+        CurrentUser currentUser = currentUserContext.getCurrentUser();
 
         CreateQuoteCommand command = quoteCommandMapper.toCreateCommand(
                 request,
@@ -39,7 +44,7 @@ public class QuoteCommandController {
 
     @PostMapping("/{id}/submit")
     public QuoteCommandResponse submit(@PathVariable String id) {
-        String currentUser = "demo-user";
+        CurrentUser currentUser = currentUserContext.getCurrentUser();
 
         SubmitQuoteCommand command = quoteCommandMapper.toSubmitCommand(
                 id,
@@ -51,7 +56,7 @@ public class QuoteCommandController {
 
     @PostMapping("/{id}/approve")
     public QuoteCommandResponse approve(@PathVariable String id) {
-        String currentUser = "demo-user";
+        CurrentUser currentUser = currentUserContext.getCurrentUser();
 
         ApproveQuoteCommand command = quoteCommandMapper.toApproveCommand(
                 id,
@@ -60,7 +65,6 @@ public class QuoteCommandController {
 
         return quoteCommandService.approve(command);
     }
-
 }
 
 

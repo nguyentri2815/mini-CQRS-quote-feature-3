@@ -5,15 +5,17 @@ import java.time.LocalDateTime;
 
 public class QuoteCreatedEvent implements DomainEvent {
 
-    private String quoteId;
-    private String customerName;
-    private String productCode;
-    private BigDecimal premium;
-    private String createdBy;
-    private LocalDateTime occurredAt;
+    private final String quoteId;
+    private final String customerName;
+    private final String productCode;
+    private final BigDecimal premium;
 
-    public QuoteCreatedEvent() {
-    }
+    private final String createdBy;
+    private final String createdByName;
+    private final String tenantId;
+    private final String organizationId;
+
+    private final LocalDateTime occurredAt;
 
     public QuoteCreatedEvent(
             String quoteId,
@@ -21,6 +23,9 @@ public class QuoteCreatedEvent implements DomainEvent {
             String productCode,
             BigDecimal premium,
             String createdBy,
+            String createdByName,
+            String tenantId,
+            String organizationId,
             LocalDateTime occurredAt
     ) {
         this.quoteId = quoteId;
@@ -28,56 +33,10 @@ public class QuoteCreatedEvent implements DomainEvent {
         this.productCode = productCode;
         this.premium = premium;
         this.createdBy = createdBy;
+        this.createdByName = createdByName;
+        this.tenantId = tenantId;
+        this.organizationId = organizationId;
         this.occurredAt = occurredAt;
-    }
-
-    public String getQuoteId() {
-        return quoteId;
-    }
-
-    public void setQuoteId(String quoteId) {
-        this.quoteId = quoteId;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getProductCode() {
-        return productCode;
-    }
-
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
-    }
-
-    public BigDecimal getPremium() {
-        return premium;
-    }
-
-    public void setPremium(BigDecimal premium) {
-        this.premium = premium;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public void setOccurredAt(LocalDateTime occurredAt) {
-        this.occurredAt = occurredAt;
-    }
-
-    @Override
-    public String eventName() {
-        return "QuoteCreatedEvent";
     }
 
     @Override
@@ -86,8 +45,45 @@ public class QuoteCreatedEvent implements DomainEvent {
     }
 
     @Override
+    public String eventName() {
+        return "QuoteCreatedEvent";
+    }
+
+    @Override
     public LocalDateTime occurredAt() {
         return occurredAt;
+    }
+
+    public String getQuoteId() {
+        return quoteId;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public BigDecimal getPremium() {
+        return premium;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getOrganizationId() {
+        return organizationId;
     }
 }
 

@@ -4,6 +4,7 @@ import com.example.quote_service_eventstore.domain.quote.command.ApproveQuoteCom
 import com.example.quote_service_eventstore.domain.quote.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.domain.quote.command.SubmitQuoteCommand;
 import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCreateRequest;
+import com.example.quote_service_eventstore.shared.security.CurrentUser;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,33 +12,42 @@ public class QuoteCommandMapper {
 
     public CreateQuoteCommand toCreateCommand(
             QuoteCreateRequest request,
-            String currentUser
+            CurrentUser currentUser
     ) {
         return new CreateQuoteCommand(
                 request.getCustomerName(),
                 request.getProductCode(),
                 request.getPremium(),
-                currentUser
+                currentUser.getUserId(),
+                currentUser.getUsername(),
+                currentUser.getTenantId(),
+                currentUser.getOrganizationId()
         );
     }
 
     public SubmitQuoteCommand toSubmitCommand(
             String quoteId,
-            String currentUser
+            CurrentUser currentUser
     ) {
         return new SubmitQuoteCommand(
                 quoteId,
-                currentUser
+                currentUser.getUserId(),
+                currentUser.getUsername(),
+                currentUser.getTenantId(),
+                currentUser.getOrganizationId()
         );
     }
 
     public ApproveQuoteCommand toApproveCommand(
             String quoteId,
-            String currentUser
+            CurrentUser currentUser
     ) {
         return new ApproveQuoteCommand(
                 quoteId,
-                currentUser
+                currentUser.getUserId(),
+                currentUser.getUsername(),
+                currentUser.getTenantId(),
+                currentUser.getOrganizationId()
         );
     }
 }
