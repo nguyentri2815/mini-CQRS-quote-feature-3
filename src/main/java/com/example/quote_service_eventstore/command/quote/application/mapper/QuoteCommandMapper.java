@@ -3,7 +3,7 @@ package com.example.quote_service_eventstore.command.quote.application.mapper;
 import com.example.quote_service_eventstore.domain.quote.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.domain.quote.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.domain.quote.command.SubmitQuoteCommand;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteCreateRequest;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCreateRequest;
 import org.springframework.stereotype.Component;
 
 @Component

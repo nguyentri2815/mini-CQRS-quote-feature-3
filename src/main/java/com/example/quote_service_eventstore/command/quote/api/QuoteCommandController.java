@@ -4,8 +4,8 @@ import com.example.quote_service_eventstore.domain.quote.command.ApproveQuoteCom
 import com.example.quote_service_eventstore.domain.quote.command.CreateQuoteCommand;
 import com.example.quote_service_eventstore.domain.quote.command.SubmitQuoteCommand;
 import com.example.quote_service_eventstore.command.quote.application.mapper.QuoteCommandMapper;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteCreateRequest;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCreateRequest;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCommandResponse;
 import com.example.quote_service_eventstore.command.quote.application.service.QuoteCommandService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +26,7 @@ public class QuoteCommandController {
     }
 
     @PostMapping
-    public QuoteResponse create(@Valid @RequestBody QuoteCreateRequest request) {
+    public QuoteCommandResponse create(@Valid @RequestBody QuoteCreateRequest request) {
         String currentUser = "demo-user";
 
         CreateQuoteCommand command = quoteCommandMapper.toCreateCommand(
@@ -38,7 +38,7 @@ public class QuoteCommandController {
     }
 
     @PostMapping("/{id}/submit")
-    public QuoteResponse submit(@PathVariable String id) {
+    public QuoteCommandResponse submit(@PathVariable String id) {
         String currentUser = "demo-user";
 
         SubmitQuoteCommand command = quoteCommandMapper.toSubmitCommand(
@@ -50,7 +50,7 @@ public class QuoteCommandController {
     }
 
     @PostMapping("/{id}/approve")
-    public QuoteResponse approve(@PathVariable String id) {
+    public QuoteCommandResponse approve(@PathVariable String id) {
         String currentUser = "demo-user";
 
         ApproveQuoteCommand command = quoteCommandMapper.toApproveCommand(

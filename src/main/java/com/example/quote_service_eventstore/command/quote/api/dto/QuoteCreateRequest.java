@@ -1,4 +1,4 @@
-package com.example.quote_service_eventstore.command.quote.dto;
+package com.example.quote_service_eventstore.command.quote.api.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

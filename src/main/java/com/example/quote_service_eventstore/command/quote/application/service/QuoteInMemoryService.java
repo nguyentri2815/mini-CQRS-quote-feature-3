@@ -2,10 +2,10 @@ package com.example.quote_service_eventstore.command.quote.application.service;
 
 import com.example.quote_service_eventstore.shared.exception.BusinessException;
 import com.example.quote_service_eventstore.shared.exception.NotFoundException;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteCreateRequest;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCreateRequest;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteListItemResponse;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCommandResponse;
 import com.example.quote_service_eventstore.domain.quote.model.Quote;
 import com.example.quote_service_eventstore.domain.quote.model.QuoteStatus;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class QuoteInMemoryService {
 
     private final Map<String, Quote> quoteStore = new ConcurrentHashMap<>();
 
-    public QuoteResponse create(QuoteCreateRequest request) {
+    public QuoteCommandResponse create(QuoteCreateRequest request) {
         LocalDateTime now = LocalDateTime.now();
 
         Quote quote = new Quote(
@@ -41,7 +41,7 @@ public class QuoteInMemoryService {
         return toResponse(quote);
     }
 
-    public QuoteResponse submit(String id) {
+    public QuoteCommandResponse submit(String id) {
         Quote quote = findQuoteOrThrow(id);
 
         if (quote.getStatus() != QuoteStatus.DRAFT) {
@@ -56,7 +56,7 @@ public class QuoteInMemoryService {
         return toResponse(quote);
     }
 
-    public QuoteResponse approve(String id) {
+    public QuoteCommandResponse approve(String id) {
         Quote quote = findQuoteOrThrow(id);
 
         if (quote.getStatus() != QuoteStatus.SUBMITTED) {
@@ -109,8 +109,8 @@ public class QuoteInMemoryService {
         return quote;
     }
 
-    private QuoteResponse toResponse(Quote quote) {
-        return new QuoteResponse(
+    private QuoteCommandResponse toResponse(Quote quote) {
+        return new QuoteCommandResponse(
                 quote.getId(),
                 quote.getStatus().name()
         );

@@ -7,7 +7,7 @@ import com.example.quote_service_eventstore.domain.quote.command.SubmitQuoteComm
 import com.example.quote_service_eventstore.command.quote.application.repository.QuoteAggregateRepository;
 import com.example.quote_service_eventstore.domain.quote.aggregate.QuoteAggregate;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteListItemResponse;
-import com.example.quote_service_eventstore.command.quote.dto.QuoteResponse;
+import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCommandResponse;
 import com.example.quote_service_eventstore.domain.quote.model.Quote;
 import com.example.quote_service_eventstore.domain.quote.model.QuoteStatus;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class QuoteCommandService {
 
 
     @Transactional
-    public QuoteResponse create(CreateQuoteCommand command) {
+    public QuoteCommandResponse create(CreateQuoteCommand command) {
 //        QuoteAggregate aggregate = QuoteAggregate.empty();
 //
 //        QuoteCreatedEvent event = aggregate.create(command);
@@ -78,14 +78,14 @@ public class QuoteCommandService {
 
         QuoteAggregate aggregate = result.getAggregate();
 
-        return new QuoteResponse(
+        return new QuoteCommandResponse(
                 aggregate.getId(),
                 aggregate.getStatus().name()
         );
     }
 
     @Transactional
-    public QuoteResponse submit(SubmitQuoteCommand command) {
+    public QuoteCommandResponse submit(SubmitQuoteCommand command) {
 //        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 //
 //        QuoteSubmittedEvent event = aggregate.submit(command);
@@ -123,7 +123,7 @@ public class QuoteCommandService {
     }
 
     @Transactional
-    public QuoteResponse approve(ApproveQuoteCommand command) {
+    public QuoteCommandResponse approve(ApproveQuoteCommand command) {
 //        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 //
 //        QuoteApprovedEvent event = aggregate.approve(command);
@@ -150,18 +150,18 @@ public class QuoteCommandService {
 
         QuoteAggregate aggregate = result.getAggregate();
 
-        return new QuoteResponse(
+        return new QuoteCommandResponse(
                 aggregate.getId(),
                 aggregate.getStatus().name()
         );
     }
 
-    private QuoteResponse toResponse(
+    private QuoteCommandResponse toResponse(
             AggregateCommandResult<QuoteAggregate> result
     ) {
         QuoteAggregate aggregate = result.getAggregate();
 
-        return new QuoteResponse(
+        return new QuoteCommandResponse(
                 aggregate.getId(),
                 aggregate.getStatus().name()
         );
