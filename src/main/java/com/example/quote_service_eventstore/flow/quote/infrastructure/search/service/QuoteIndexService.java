@@ -1,11 +1,11 @@
 package com.example.quote_service_eventstore.flow.quote.infrastructure.search.service;
 
 import com.example.quote_service_eventstore.shared.exception.NotFoundException;
-import com.example.quote_service_eventstore.readmodel.quote.entity.QuoteStateEntity;
-import com.example.quote_service_eventstore.readmodel.quote.repository.QuoteStateRepository;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.document.QuoteDocument;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.mapper.QuoteSearchMapper;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.repository.QuoteSearchRepository;
+import com.example.quote_service_eventstore.readmodel.quote.state.entity.QuoteStateEntity;
+import com.example.quote_service_eventstore.readmodel.quote.state.repository.QuoteStateRepository;
+import com.example.quote_service_eventstore.readmodel.quote.search.document.QuoteDocument;
+import com.example.quote_service_eventstore.readmodel.quote.search.mapper.QuoteSearchMapper;
+import com.example.quote_service_eventstore.readmodel.quote.search.repository.QuoteSearchRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

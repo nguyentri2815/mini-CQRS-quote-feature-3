@@ -5,7 +5,7 @@ import com.example.quote_service_eventstore.shared.eventstore.EventStore;
 import com.example.quote_service_eventstore.shared.eventstore.EventStoreRecord;
 import com.example.quote_service_eventstore.domain.quote.event.DomainEvent;
 import com.example.quote_service_eventstore.flow.quote.projection.handler.QuoteStateProjectionHandler;
-import com.example.quote_service_eventstore.readmodel.quote.repository.QuoteStateRepository;
+import com.example.quote_service_eventstore.readmodel.quote.state.repository.QuoteStateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

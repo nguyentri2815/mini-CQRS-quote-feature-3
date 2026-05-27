@@ -2,8 +2,8 @@ package com.example.quote_service_eventstore.query.quote.application;
 
 import com.example.quote_service_eventstore.shared.exception.NotFoundException;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteDetailResponse;
-import com.example.quote_service_eventstore.readmodel.quote.entity.QuoteStateEntity;
-import com.example.quote_service_eventstore.readmodel.quote.repository.QuoteStateRepository;
+import com.example.quote_service_eventstore.readmodel.quote.state.entity.QuoteStateEntity;
+import com.example.quote_service_eventstore.readmodel.quote.state.repository.QuoteStateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,4 +1,4 @@
-package com.example.quote_service_eventstore.flow.quote.infrastructure.search.document;
+package com.example.quote_service_eventstore.readmodel.quote.search.document;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;

@@ -1,6 +1,6 @@
-package com.example.quote_service_eventstore.readmodel.quote.repository;
+package com.example.quote_service_eventstore.readmodel.quote.state.repository;
 
-import com.example.quote_service_eventstore.readmodel.quote.entity.QuoteStateEntity;
+import com.example.quote_service_eventstore.readmodel.quote.state.entity.QuoteStateEntity;
 import com.example.quote_service_eventstore.domain.quote.model.QuoteStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 

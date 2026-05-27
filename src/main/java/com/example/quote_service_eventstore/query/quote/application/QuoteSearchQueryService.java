@@ -2,8 +2,8 @@ package com.example.quote_service_eventstore.query.quote.application;
 
 import com.example.quote_service_eventstore.shared.dto.PageResult;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteListItemResponse;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.document.QuoteDocument;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.mapper.QuoteSearchMapper;
+import com.example.quote_service_eventstore.readmodel.quote.search.document.QuoteDocument;
+import com.example.quote_service_eventstore.readmodel.quote.search.mapper.QuoteSearchMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;

@@ -1,6 +1,6 @@
-package com.example.quote_service_eventstore.flow.quote.infrastructure.search.repository;
+package com.example.quote_service_eventstore.readmodel.quote.search.repository;
 
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.document.QuoteDocument;
+import com.example.quote_service_eventstore.readmodel.quote.search.document.QuoteDocument;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 import java.util.List;

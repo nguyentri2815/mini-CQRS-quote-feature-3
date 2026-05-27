@@ -1,8 +1,8 @@
-package com.example.quote_service_eventstore.flow.quote.infrastructure.search.mapper;
+package com.example.quote_service_eventstore.readmodel.quote.search.mapper;
 
 import com.example.quote_service_eventstore.query.quote.dto.QuoteListItemResponse;
-import com.example.quote_service_eventstore.readmodel.quote.entity.QuoteStateEntity;
-import com.example.quote_service_eventstore.flow.quote.infrastructure.search.document.QuoteDocument;
+import com.example.quote_service_eventstore.readmodel.quote.state.entity.QuoteStateEntity;
+import com.example.quote_service_eventstore.readmodel.quote.search.document.QuoteDocument;
 import org.springframework.stereotype.Component;
 
 @Component
