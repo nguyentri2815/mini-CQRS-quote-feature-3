@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.command.quote.application.service;
 
+import com.example.quote_service_eventstore.command.quote.application.policy.QuoteCommandPermissionPolicy;
 import com.example.quote_service_eventstore.shared.eventsource.AggregateCommandResult;
 import com.example.quote_service_eventstore.domain.quote.command.ApproveQuoteCommand;
 import com.example.quote_service_eventstore.domain.quote.command.CreateQuoteCommand;
@@ -10,6 +11,7 @@ import com.example.quote_service_eventstore.query.quote.dto.QuoteListItemRespons
 import com.example.quote_service_eventstore.command.quote.api.dto.QuoteCommandResponse;
 import com.example.quote_service_eventstore.domain.quote.model.Quote;
 import com.example.quote_service_eventstore.domain.quote.model.QuoteStatus;
+import com.example.quote_service_eventstore.shared.security.CurrentUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,11 +34,14 @@ public class QuoteCommandService {
     private static final Logger log = LoggerFactory.getLogger(QuoteCommandService.class);
 
     private final QuoteAggregateRepository quoteAggregateRepository;
+    private final QuoteCommandPermissionPolicy permissionPolicy;
 
     public QuoteCommandService(
-            QuoteAggregateRepository quoteAggregateRepository
+            QuoteAggregateRepository quoteAggregateRepository,
+            QuoteCommandPermissionPolicy permissionPolicy
     ) {
         this.quoteAggregateRepository = quoteAggregateRepository;
+        this.permissionPolicy = permissionPolicy;
     }
 
 //    public QuoteCommandService(
@@ -55,7 +60,11 @@ public class QuoteCommandService {
 
 
     @Transactional
-    public QuoteCommandResponse create(CreateQuoteCommand command) {
+    public QuoteCommandResponse create(
+            CreateQuoteCommand command,
+            CurrentUser currentUser
+    ) {
+        permissionPolicy.checkCanCreate(currentUser);
 //        QuoteAggregate aggregate = QuoteAggregate.empty();
 //
 //        QuoteCreatedEvent event = aggregate.create(command);
@@ -85,7 +94,11 @@ public class QuoteCommandService {
     }
 
     @Transactional
-    public QuoteCommandResponse submit(SubmitQuoteCommand command) {
+    public QuoteCommandResponse submit (
+            SubmitQuoteCommand command,
+            CurrentUser currentUser
+    ) {
+        permissionPolicy.checkCanSubmit(currentUser);
 //        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 //
 //        QuoteSubmittedEvent event = aggregate.submit(command);
@@ -123,7 +136,11 @@ public class QuoteCommandService {
     }
 
     @Transactional
-    public QuoteCommandResponse approve(ApproveQuoteCommand command) {
+    public QuoteCommandResponse approve(
+            ApproveQuoteCommand command,
+            CurrentUser currentUser
+    ) {
+        permissionPolicy.checkCanApprove(currentUser);
 //        QuoteAggregate aggregate = quoteAggregateLoader.load(command.getQuoteId());
 //
 //        QuoteApprovedEvent event = aggregate.approve(command);

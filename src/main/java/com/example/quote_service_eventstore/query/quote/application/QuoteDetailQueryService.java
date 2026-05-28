@@ -4,6 +4,7 @@ import com.example.quote_service_eventstore.shared.exception.NotFoundException;
 import com.example.quote_service_eventstore.query.quote.dto.QuoteDetailResponse;
 import com.example.quote_service_eventstore.readmodel.quote.state.entity.QuoteStateEntity;
 import com.example.quote_service_eventstore.readmodel.quote.state.repository.QuoteStateRepository;
+import com.example.quote_service_eventstore.shared.security.CurrentUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,10 @@ public class QuoteDetailQueryService {
     }
 
     @Transactional(readOnly = true)
-    public QuoteDetailResponse detail(String id) {
+    public QuoteDetailResponse detail(
+            String id,
+            CurrentUser currentUser
+    ) {
         QuoteStateEntity entity = quoteStateRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Quote not found: " + id));
 
@@ -32,7 +36,7 @@ public class QuoteDetailQueryService {
                 entity.getProductCode(),
                 entity.getPremium(),
                 entity.getStatus().name(),
-                quoteActionPolicy.availableActions(entity.getStatus())
+                quoteActionPolicy.availableActions(entity.getStatus(), currentUser)
         );
     }
 

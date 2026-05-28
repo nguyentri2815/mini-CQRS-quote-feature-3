@@ -39,7 +39,10 @@ public class QuoteCommandController {
                 currentUser
         );
 
-        return quoteCommandService.create(command);
+        return quoteCommandService.create(
+                command,
+                currentUser
+        );
     }
 
     @PostMapping("/{id}/submit")
@@ -51,7 +54,10 @@ public class QuoteCommandController {
                 currentUser
         );
 
-        return quoteCommandService.submit(command);
+        return quoteCommandService.submit(
+                command,
+                currentUser
+        );
     }
 
     @PostMapping("/{id}/approve")
@@ -63,7 +69,10 @@ public class QuoteCommandController {
                 currentUser
         );
 
-        return quoteCommandService.approve(command);
+        return quoteCommandService.approve(
+                command,
+                currentUser
+        );
     }
 }
 

@@ -6,6 +6,8 @@ import com.example.quote_service_eventstore.query.quote.application.QuoteDetailQ
 import com.example.quote_service_eventstore.query.quote.application.QuoteSearchCriteria;
 import com.example.quote_service_eventstore.query.quote.application.QuoteSearchQueryService;
 import com.example.quote_service_eventstore.shared.dto.PageResult;
+import com.example.quote_service_eventstore.shared.security.CurrentUser;
+import com.example.quote_service_eventstore.shared.security.CurrentUserContext;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,18 +16,22 @@ public class QuoteQueryController {
 
     private final QuoteDetailQueryService quoteDetailQueryService;
     private final QuoteSearchQueryService quoteSearchQueryService;
+    private final CurrentUserContext currentUserContext;
 
     public QuoteQueryController(
             QuoteDetailQueryService quoteDetailQueryService,
-            QuoteSearchQueryService quoteSearchQueryService
+            QuoteSearchQueryService quoteSearchQueryService,
+            CurrentUserContext currentUserContext
     ) {
         this.quoteDetailQueryService = quoteDetailQueryService;
         this.quoteSearchQueryService = quoteSearchQueryService;
+        this.currentUserContext = currentUserContext;
     }
 
     @GetMapping("/{id}")
     public QuoteDetailResponse detail(@PathVariable String id) {
-        return quoteDetailQueryService.detail(id);
+        CurrentUser currentUser = currentUserContext.getCurrentUser();
+        return quoteDetailQueryService.detail(id, currentUser);
     }
 
     @GetMapping
