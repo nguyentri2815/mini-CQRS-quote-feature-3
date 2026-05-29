@@ -8,8 +8,10 @@ import com.example.quote_service_eventstore.shared.messaging.DomainEventMessage;
 import com.example.quote_service_eventstore.shared.messaging.DomainEventRabbitConfig;
 import com.example.quote_service_eventstore.shared.messaging.dedup.MessageDedupService;
 import com.example.quote_service_eventstore.domain.quote.event.DomainEvent;
+import com.example.quote_service_eventstore.shared.observability.ObservabilityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,26 @@ public class RabbitMqDomainEventConsumer {
     @RabbitListener(queues = DomainEventRabbitConfig.QUOTE_EVENT_QUEUE)
     @Transactional
     public void consume(DomainEventMessage message) {
+        String correlationId = message.getCorrelationId();
+
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = "unknown";
+        }
+
+        MDC.put(
+                ObservabilityConstants.CORRELATION_ID_MDC_KEY,
+                correlationId
+        );
+
+        log.info(
+                "[CONSUMER] Message received. messageId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
+                message.getEventId(),
+                message.getEventType(),
+                message.getAggregateId(),
+                message.getAggregateVersion(),
+                correlationId
+        );
+
         try {
             process(message);
         } catch (Exception exception) {
@@ -51,6 +73,8 @@ public class RabbitMqDomainEventConsumer {
             );
 
             throw exception;
+        } finally {
+            MDC.remove(ObservabilityConstants.CORRELATION_ID_MDC_KEY);
         }
     }
 
@@ -85,12 +109,43 @@ public class RabbitMqDomainEventConsumer {
 
         DomainEvent event = eventDeserializer.deserialize(temporaryRecord);
 
+        log.info(
+                "[CONSUMER] Message deserialized. messageId={}, eventType={}, aggregateId={}, version={}",
+                message.getEventId(),
+                event.eventName(),
+                event.aggregateId(),
+                message.getAggregateVersion()
+        );
+
+        int dispatchedHandlerCount = 0;
+
         for (DomainEventHandler<? extends DomainEvent> handler : handlers) {
             if (handler.eventType().equals(event.getClass())) {
                 dispatch(handler, event, message);
+                dispatchedHandlerCount++;
             }
         }
+
+        if (dispatchedHandlerCount == 0) {
+            log.warn(
+                    "[CONSUMER] No handler matched event. messageId={}, eventType={}, aggregateId={}, version={}",
+                    message.getEventId(),
+                    message.getEventType(),
+                    message.getAggregateId(),
+                    message.getAggregateVersion()
+            );
+        }
+
         messageDedupService.markProcessed(message);
+
+        log.info(
+                "[CONSUMER] Processed event message. messageId={}, eventType={}, aggregateId={}, version={}, dispatchedHandlers={}",
+                message.getEventId(),
+                message.getEventType(),
+                message.getAggregateId(),
+                message.getAggregateVersion(),
+                dispatchedHandlerCount
+        );
     }
 
     @SuppressWarnings("unchecked")
@@ -108,6 +163,24 @@ public class RabbitMqDomainEventConsumer {
                 message.getAggregateVersion()
         );
 
+        log.info(
+                "[CONSUMER] Dispatching event handler. messageId={}, eventType={}, aggregateId={}, version={}, handler={}",
+                message.getEventId(),
+                message.getEventType(),
+                message.getAggregateId(),
+                message.getAggregateVersion(),
+                handler.getClass().getSimpleName()
+        );
+
         typedHandler.handle(envelope);
+
+        log.info(
+                "[CONSUMER] Event handler completed. messageId={}, eventType={}, aggregateId={}, version={}, handler={}",
+                message.getEventId(),
+                message.getEventType(),
+                message.getAggregateId(),
+                message.getAggregateVersion(),
+                handler.getClass().getSimpleName()
+        );
     }
 }

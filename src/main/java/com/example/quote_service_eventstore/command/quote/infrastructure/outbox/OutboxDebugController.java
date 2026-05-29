@@ -35,6 +35,7 @@ public class OutboxDebugController {
                 outboxEvent.getEventType(),
                 outboxEvent.getPayload(),
                 outboxEvent.getAggregateVersion(),
+                outboxEvent.getCorrelationId(),
                 outboxEvent.getCreatedAt()
         );
 

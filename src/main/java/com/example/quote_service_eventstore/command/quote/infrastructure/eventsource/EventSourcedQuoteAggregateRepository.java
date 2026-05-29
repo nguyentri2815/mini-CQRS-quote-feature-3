@@ -16,6 +16,8 @@ import com.example.quote_service_eventstore.domain.quote.event.QuoteApprovedEven
 import com.example.quote_service_eventstore.domain.quote.event.QuoteCreatedEvent;
 import com.example.quote_service_eventstore.domain.quote.event.QuoteSubmittedEvent;
 import com.example.quote_service_eventstore.command.quote.application.service.QuoteAggregateLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.List;
 @Repository
 public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(EventSourcedQuoteAggregateRepository.class);
     private static final String QUOTE_AGGREGATE_TYPE = "Quote";
 
     private final EventStore eventStore;
@@ -97,10 +100,26 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
             DomainEvent event,
             long oldVersion
     ) {
+        log.info(
+                "[EVENT_SOURCE] Commit started. eventType={}, aggregateId={}, oldVersion={}",
+                event.eventName(),
+                event.aggregateId(),
+                oldVersion
+        );
+
         EventStoreRecord record = eventStore.append(
                 QUOTE_AGGREGATE_TYPE,
                 event,
                 oldVersion
+        );
+
+        log.info(
+                "[EVENT_STORE] Appended event. eventId={}, eventType={}, aggregateId={}, oldVersion={}, newVersion={}",
+                record.getEventId(),
+                record.getEventType(),
+                record.getAggregateId(),
+                oldVersion,
+                record.getVersion()
         );
 
         outboxEventStore.save(
@@ -108,7 +127,23 @@ public class EventSourcedQuoteAggregateRepository implements QuoteAggregateRepos
                 record.getVersion()
         );
 
+        log.info(
+                "[EVENT_SOURCE] Outbox saved for committed event. eventId={}, eventType={}, aggregateId={}, version={}",
+                record.getEventId(),
+                record.getEventType(),
+                record.getAggregateId(),
+                record.getVersion()
+        );
+
         aggregate.apply(event);
+
+        log.info(
+                "[EVENT_SOURCE] Aggregate applied event. eventType={}, aggregateId={}, oldVersion={}, newVersion={}",
+                event.eventName(),
+                event.aggregateId(),
+                oldVersion,
+                record.getVersion()
+        );
 
         EventAppendResult appendResult = new EventAppendResult(
                 event.aggregateId(),

@@ -30,23 +30,40 @@ public class QuoteIndexService {
     }
 
     public void syncQuote(String quoteId) {
+        log.info("[SYNC_ES] Sync started. quoteId={}", quoteId);
+
         QuoteStateEntity entity = quoteStateRepository.findById(quoteId)
                 .orElseThrow(() -> new NotFoundException("Quote state not found for indexing: " + quoteId));
 
+        log.info(
+                "[SYNC_ES] Loaded quote_state. quoteId={}, status={}, version={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion()
+        );
+
         QuoteDocument document = quoteSearchMapper.toDocument(entity);
+
+        log.info(
+                "[SYNC_ES] Saving quote document. quoteId={}, status={}",
+                document.getId(),
+                document.getStatus()
+        );
 
         quoteSearchRepository.save(document);
 
         log.info(
-                "[SYNC_ES] Synced quote to Elasticsearch. quoteId={}, status={}",
+                "[SYNC_ES] Sync completed. quoteId={}, status={}",
                 document.getId(),
                 document.getStatus()
         );
     }
 
     public void deleteQuote(String quoteId) {
+        log.info("[SYNC_ES] Delete started. quoteId={}", quoteId);
+
         quoteSearchRepository.deleteById(quoteId);
 
-        log.info("[SYNC_ES] Deleted quote from Elasticsearch. quoteId={}", quoteId);
+        log.info("[SYNC_ES] Delete completed. quoteId={}", quoteId);
     }
 }

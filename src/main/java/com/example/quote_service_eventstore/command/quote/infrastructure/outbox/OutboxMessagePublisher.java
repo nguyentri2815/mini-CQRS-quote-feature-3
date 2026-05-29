@@ -2,9 +2,11 @@ package com.example.quote_service_eventstore.command.quote.infrastructure.outbox
 
 import com.example.quote_service_eventstore.shared.messaging.DomainEventMessage;
 import com.example.quote_service_eventstore.shared.messaging.DomainEventRabbitConfig;
+import com.example.quote_service_eventstore.shared.observability.ObservabilityConstants;
 import com.example.quote_service_eventstore.shared.outbox.OutboxEventStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -37,12 +39,27 @@ public class OutboxMessagePublisher {
                         OutboxEventStatus.PENDING
                 );
 
+        if (!pendingEvents.isEmpty()) {
+            log.info("[OUTBOX_PUBLISHER] Found pending events. count={}", pendingEvents.size());
+        }
+
         for (OutboxEventEntity outboxEvent : pendingEvents) {
             publishOne(outboxEvent);
         }
     }
 
     private void publishOne(OutboxEventEntity outboxEvent) {
+        String correlationId = outboxEvent.getCorrelationId();
+
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = "unknown";
+        }
+
+        MDC.put(
+                ObservabilityConstants.CORRELATION_ID_MDC_KEY,
+                correlationId
+        );
+
         try {
             DomainEventMessage message = new DomainEventMessage(
                     outboxEvent.getId(),
@@ -51,14 +68,17 @@ public class OutboxMessagePublisher {
                     outboxEvent.getEventType(),
                     outboxEvent.getPayload(),
                     outboxEvent.getAggregateVersion(),
+                    correlationId,
                     outboxEvent.getCreatedAt()
             );
 
             log.info(
-                    "[OUTBOX] Publishing message. outboxId={}, eventType={}, aggregateId={}",
+                    "[OUTBOX_PUBLISHER] Publishing event. eventId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
                     outboxEvent.getId(),
                     outboxEvent.getEventType(),
-                    outboxEvent.getAggregateId()
+                    outboxEvent.getAggregateId(),
+                    outboxEvent.getAggregateVersion(),
+                    correlationId
             );
 
             rabbitTemplate.convertAndSend(
@@ -69,15 +89,38 @@ public class OutboxMessagePublisher {
 
             outboxEvent.markSent(LocalDateTime.now());
 
-        } catch (Exception exception) {
-            log.error(
-                    "[OUTBOX] Failed to publish message. outboxId={}, eventType={}",
+            log.info(
+                    "[OUTBOX_PUBLISHER] Published event and marked sent. eventId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
                     outboxEvent.getId(),
                     outboxEvent.getEventType(),
+                    outboxEvent.getAggregateId(),
+                    outboxEvent.getAggregateVersion(),
+                    correlationId
+            );
+
+        } catch (Exception exception) {
+            log.error(
+                    "[OUTBOX_PUBLISHER] Failed to publish event. outboxId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
+                    outboxEvent.getId(),
+                    outboxEvent.getEventType(),
+                    outboxEvent.getAggregateId(),
+                    outboxEvent.getAggregateVersion(),
+                    correlationId,
                     exception
             );
 
             outboxEvent.markFailed(exception.getMessage());
+
+            log.warn(
+                    "[OUTBOX_PUBLISHER] Marked event failed. outboxId={}, eventType={}, aggregateId={}, retryCount={}, correlationId={}",
+                    outboxEvent.getId(),
+                    outboxEvent.getEventType(),
+                    outboxEvent.getAggregateId(),
+                    outboxEvent.getRetryCount(),
+                    correlationId
+            );
+        } finally {
+            MDC.remove(ObservabilityConstants.CORRELATION_ID_MDC_KEY);
         }
     }
 }

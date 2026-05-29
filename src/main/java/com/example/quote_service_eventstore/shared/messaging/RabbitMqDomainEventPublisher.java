@@ -3,6 +3,7 @@ package com.example.quote_service_eventstore.shared.messaging;
 import com.example.quote_service_eventstore.shared.eventbus.DomainEventPublisher;
 import com.example.quote_service_eventstore.shared.eventstore.EventSerializer;
 import com.example.quote_service_eventstore.domain.quote.event.DomainEvent;
+import com.example.quote_service_eventstore.shared.observability.CorrelationIdProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -20,13 +21,16 @@ public class RabbitMqDomainEventPublisher implements DomainEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
     private final EventSerializer eventSerializer;
+    private final CorrelationIdProvider correlationIdProvider;
 
     public RabbitMqDomainEventPublisher(
             RabbitTemplate rabbitTemplate,
-            EventSerializer eventSerializer
+            EventSerializer eventSerializer,
+            CorrelationIdProvider correlationIdProvider
     ) {
         this.rabbitTemplate = rabbitTemplate;
         this.eventSerializer = eventSerializer;
+        this.correlationIdProvider = correlationIdProvider;
     }
 
     @Override
@@ -38,13 +42,15 @@ public class RabbitMqDomainEventPublisher implements DomainEventPublisher {
                 event.eventName(),
                 eventSerializer.serialize(event),
                 1,//test
+                correlationIdProvider.getCorrelationId(),
                 event.occurredAt()
         );
 
         log.info(
-                "[RABBIT_PUBLISHER] Publishing event message. eventType={}, aggregateId={}",
+                "[RABBIT_PUBLISHER] Publishing event message. eventType={}, aggregateId={}, correlationId={}",
                 message.getEventType(),
-                message.getAggregateId()
+                message.getAggregateId(),
+                message.getCorrelationId()
         );
 
         rabbitTemplate.convertAndSend(

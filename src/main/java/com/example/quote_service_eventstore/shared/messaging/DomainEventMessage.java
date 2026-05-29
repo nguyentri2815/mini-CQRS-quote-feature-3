@@ -11,6 +11,7 @@ public class DomainEventMessage {
     private String payload;
     private long aggregateVersion;
     private LocalDateTime occurredAt;
+    private String correlationId;
 
     public DomainEventMessage() {
     }
@@ -22,6 +23,7 @@ public class DomainEventMessage {
             String eventType,
             String payload,
             long aggregateVersion,
+            String correlationId,
             LocalDateTime occurredAt
     ) {
         this.eventId = eventId;
@@ -30,6 +32,7 @@ public class DomainEventMessage {
         this.eventType = eventType;
         this.payload = payload;
         this.aggregateVersion = aggregateVersion;
+        this.correlationId = correlationId;
         this.occurredAt = occurredAt;
     }
 
@@ -84,4 +87,13 @@ public class DomainEventMessage {
     public void setOccurredAt(LocalDateTime occurredAt) {
         this.occurredAt = occurredAt;
     }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
+
 }

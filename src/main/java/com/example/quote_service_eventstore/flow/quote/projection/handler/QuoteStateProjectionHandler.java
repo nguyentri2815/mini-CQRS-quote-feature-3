@@ -25,6 +25,13 @@ public class QuoteStateProjectionHandler {
     }
 
     public void project(DomainEvent event, long aggregateVersion) {
+        log.info(
+                "[PROJECTION] Applying event. eventType={}, aggregateId={}, version={}",
+                event.eventName(),
+                event.aggregateId(),
+                aggregateVersion
+        );
+
         if (event instanceof QuoteCreatedEvent quoteCreatedEvent) {
             onQuoteCreated(quoteCreatedEvent, aggregateVersion);
             return;
@@ -45,6 +52,12 @@ public class QuoteStateProjectionHandler {
 
     private void onQuoteCreated(QuoteCreatedEvent event, long aggregateVersion) {
         if (aggregateVersion != 1) {
+            log.warn(
+                    "[PROJECTION] Invalid created event version. quoteId={}, eventVersion={}",
+                    event.getQuoteId(),
+                    aggregateVersion
+            );
+
             throw new BusinessException(
                     "QuoteCreatedEvent must be version 1. Actual version: " + aggregateVersion
             );
@@ -76,10 +89,25 @@ public class QuoteStateProjectionHandler {
         entity.setCreatedByName(event.getCreatedByName());
 
         quoteStateRepository.save(entity);
+
+        log.info(
+                "[PROJECTION] Created quote_state. quoteId={}, status={}, version={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion()
+        );
     }
 
     private void onQuoteSubmitted(QuoteSubmittedEvent event, long aggregateVersion) {
         QuoteStateEntity entity = findQuoteStateOrThrow(event.getQuoteId());
+
+        log.info(
+                "[PROJECTION] Applying submitted transition. quoteId={}, currentStatus={}, currentVersion={}, eventVersion={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion(),
+                aggregateVersion
+        );
 
         if (!canApply(entity, aggregateVersion)) {
             return;
@@ -92,10 +120,25 @@ public class QuoteStateProjectionHandler {
         entity.setSubmittedByName(event.getSubmittedByName());
 
         quoteStateRepository.save(entity);
+
+        log.info(
+                "[PROJECTION] Updated quote_state. quoteId={}, status={}, version={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion()
+        );
     }
 
     private void onQuoteApproved(QuoteApprovedEvent event, long aggregateVersion) {
         QuoteStateEntity entity = findQuoteStateOrThrow(event.getQuoteId());
+
+        log.info(
+                "[PROJECTION] Applying approved transition. quoteId={}, currentStatus={}, currentVersion={}, eventVersion={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion(),
+                aggregateVersion
+        );
 
         if (!canApply(entity, aggregateVersion)) {
             return;
@@ -106,6 +149,13 @@ public class QuoteStateProjectionHandler {
         entity.setLastProjectedVersion(aggregateVersion);
 
         quoteStateRepository.save(entity);
+
+        log.info(
+                "[PROJECTION] Updated quote_state. quoteId={}, status={}, version={}",
+                entity.getId(),
+                entity.getStatus(),
+                entity.getLastProjectedVersion()
+        );
     }
 
     private boolean canApply(QuoteStateEntity entity, long aggregateVersion) {
@@ -122,6 +172,13 @@ public class QuoteStateProjectionHandler {
         }
 
         if (aggregateVersion != lastProjectedVersion + 1) {
+            log.warn(
+                    "[PROJECTION] Out-of-order event detected. quoteId={}, eventVersion={}, lastProjectedVersion={}",
+                    entity.getId(),
+                    aggregateVersion,
+                    lastProjectedVersion
+            );
+
             throw new BusinessException(
                     "Out-of-order event. quoteId=" + entity.getId()
                             + ", eventVersion=" + aggregateVersion

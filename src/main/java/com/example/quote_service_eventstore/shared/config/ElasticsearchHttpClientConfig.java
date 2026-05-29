@@ -7,7 +7,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class ElasticsearchHttpClientConfig {
 
-    @Bean
+    @Bean("elasticsearchHttpRestClient")
     public RestClient elasticsearchRestClient() {
         return RestClient.builder()
                 .baseUrl("http://localhost:9200")

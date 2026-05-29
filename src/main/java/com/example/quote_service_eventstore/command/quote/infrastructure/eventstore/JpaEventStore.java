@@ -5,6 +5,8 @@ import com.example.quote_service_eventstore.shared.eventstore.EventStore;
 import com.example.quote_service_eventstore.shared.eventstore.EventStoreRecord;
 import com.example.quote_service_eventstore.shared.exception.ConcurrencyException;
 import com.example.quote_service_eventstore.domain.quote.event.DomainEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import java.util.UUID;
 @Component
 @Primary
 public class JpaEventStore implements EventStore {
+
+    private static final Logger log = LoggerFactory.getLogger(JpaEventStore.class);
 
     private final EventStoreJpaRepository eventStoreJpaRepository;
     private final EventSerializer eventSerializer;
@@ -47,7 +51,24 @@ public class JpaEventStore implements EventStore {
     ) {
         long currentVersion = currentVersion(event.aggregateId());
 
+        log.info(
+                "[EVENT_STORE] Append requested. eventType={}, aggregateType={}, aggregateId={}, expectedVersion={}, currentVersion={}",
+                event.eventName(),
+                aggregateType,
+                event.aggregateId(),
+                expectedVersion,
+                currentVersion
+        );
+
         if (currentVersion != expectedVersion) {
+            log.warn(
+                    "[EVENT_STORE] Version conflict before append. eventType={}, aggregateId={}, expectedVersion={}, currentVersion={}",
+                    event.eventName(),
+                    event.aggregateId(),
+                    expectedVersion,
+                    currentVersion
+            );
+
             throw new ConcurrencyException(
                     "Aggregate version conflict. aggregateId=" + event.aggregateId()
                             + ", expectedVersion=" + expectedVersion
@@ -69,8 +90,26 @@ public class JpaEventStore implements EventStore {
 
         try {
             EventStoreEntity savedEntity = eventStoreJpaRepository.saveAndFlush(entity);
+
+            log.info(
+                    "[EVENT_STORE] Append committed. eventId={}, eventType={}, aggregateType={}, aggregateId={}, version={}",
+                    savedEntity.getEventId(),
+                    savedEntity.getEventType(),
+                    savedEntity.getAggregateType(),
+                    savedEntity.getAggregateId(),
+                    savedEntity.getVersion()
+            );
+
             return toRecord(savedEntity);
         } catch (DataIntegrityViolationException exception) {
+            log.error(
+                    "[EVENT_STORE] Append failed because of data integrity violation. eventType={}, aggregateId={}, version={}",
+                    event.eventName(),
+                    event.aggregateId(),
+                    nextVersion,
+                    exception
+            );
+
             throw new ConcurrencyException(
                     "Aggregate version conflict while appending event. aggregateId="
                             + event.aggregateId()
@@ -88,18 +127,30 @@ public class JpaEventStore implements EventStore {
 
     @Override
     public List<EventStoreRecord> findByAggregateId(String aggregateId) {
-        return eventStoreJpaRepository.findByAggregateIdOrderByVersionAsc(aggregateId)
+        List<EventStoreRecord> records = eventStoreJpaRepository.findByAggregateIdOrderByVersionAsc(aggregateId)
                 .stream()
                 .map(this::toRecord)
                 .toList();
+
+        log.info(
+                "[EVENT_STORE] Loaded aggregate events. aggregateId={}, recordCount={}",
+                aggregateId,
+                records.size()
+        );
+
+        return records;
     }
 
     @Override
     public List<EventStoreRecord> findAll() {
-        return eventStoreJpaRepository.findAllByOrderByCreatedAtAsc()
+        List<EventStoreRecord> records = eventStoreJpaRepository.findAllByOrderByCreatedAtAsc()
                 .stream()
                 .map(this::toRecord)
                 .toList();
+
+        log.info("[EVENT_STORE] Loaded all events. recordCount={}", records.size());
+
+        return records;
     }
 
     private long nextVersion(String aggregateId) {

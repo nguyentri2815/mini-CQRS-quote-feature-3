@@ -25,6 +25,9 @@ public class OutboxEventEntity {
     @Column(name = "id", nullable = false, length = 64)
     private String id;
 
+    @Column(name = "correlation_id", length = 100)
+    private String correlationId;
+
     @Column(name = "aggregate_id", nullable = false, length = 64)
     private String aggregateId;
 
@@ -65,6 +68,7 @@ public class OutboxEventEntity {
             String aggregateType,
             String eventType,
             String payload,
+            String correlationId,
             long aggregateVersion,
             OutboxEventStatus status,
             int retryCount,
@@ -77,6 +81,7 @@ public class OutboxEventEntity {
         this.aggregateType = aggregateType;
         this.eventType = eventType;
         this.payload = payload;
+        this.correlationId = correlationId;
         this.aggregateVersion = aggregateVersion;
         this.status = status;
         this.retryCount = retryCount;
@@ -145,4 +150,9 @@ public class OutboxEventEntity {
     public void markPendingAgain() {
         this.status = OutboxEventStatus.PENDING;
     }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
 }

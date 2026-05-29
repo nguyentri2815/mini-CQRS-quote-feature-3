@@ -32,29 +32,56 @@ public class QuoteSyncWorkflow {
     public void onQuoteCreated(QuoteCreatedEvent event) {
         String quoteId = event.getQuoteId();
 
-        log.info("[WORKFLOW] Handling QuoteCreatedEvent. quoteId={}", quoteId);
+        log.info("[WORKFLOW] Started. eventType=QuoteCreatedEvent, quoteId={}", quoteId);
 
+        log.info("[WORKFLOW] Step started. eventType=QuoteCreatedEvent, quoteId={}, step=ES_SYNC", quoteId);
         quoteIndexService.syncQuote(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteCreatedEvent, quoteId={}, step=ES_SYNC", quoteId);
+
+        log.info("[WORKFLOW] Step started. eventType=QuoteCreatedEvent, quoteId={}, step=NOTIFICATION", quoteId);
         quoteNotificationService.notifyQuoteCreated(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteCreatedEvent, quoteId={}, step=NOTIFICATION", quoteId);
+
+        log.info("[WORKFLOW] Completed. eventType=QuoteCreatedEvent, quoteId={}", quoteId);
     }
 
     public void onQuoteSubmitted(QuoteSubmittedEvent event) {
         String quoteId = event.getQuoteId();
 
-        log.info("[WORKFLOW] Handling QuoteSubmittedEvent. quoteId={}", quoteId);
+        log.info("[WORKFLOW] Started. eventType=QuoteSubmittedEvent, quoteId={}", quoteId);
 
+        log.info("[WORKFLOW] Step started. eventType=QuoteSubmittedEvent, quoteId={}, step=ES_SYNC", quoteId);
         quoteIndexService.syncQuote(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteSubmittedEvent, quoteId={}, step=ES_SYNC", quoteId);
+
+        log.info("[WORKFLOW] Step started. eventType=QuoteSubmittedEvent, quoteId={}, step=NOTIFICATION", quoteId);
         quoteNotificationService.notifyQuoteSubmitted(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteSubmittedEvent, quoteId={}, step=NOTIFICATION", quoteId);
+
+        log.info("[WORKFLOW] Step started. eventType=QuoteSubmittedEvent, quoteId={}, step=ALLOCATION", quoteId);
         quoteAllocationGateway.sendSubmitAllocation(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteSubmittedEvent, quoteId={}, step=ALLOCATION", quoteId);
+
+        log.info("[WORKFLOW] Completed. eventType=QuoteSubmittedEvent, quoteId={}", quoteId);
     }
 
     public void onQuoteApproved(QuoteApprovedEvent event) {
         String quoteId = event.getQuoteId();
 
-        log.info("[WORKFLOW] Handling QuoteApprovedEvent. quoteId={}", quoteId);
+        log.info("[WORKFLOW] Started. eventType=QuoteApprovedEvent, quoteId={}", quoteId);
 
+        log.info("[WORKFLOW] Step started. eventType=QuoteApprovedEvent, quoteId={}, step=ES_SYNC", quoteId);
         quoteIndexService.syncQuote(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteApprovedEvent, quoteId={}, step=ES_SYNC", quoteId);
+
+        log.info("[WORKFLOW] Step started. eventType=QuoteApprovedEvent, quoteId={}, step=NOTIFICATION", quoteId);
         quoteNotificationService.notifyQuoteApproved(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteApprovedEvent, quoteId={}, step=NOTIFICATION", quoteId);
+
+        log.info("[WORKFLOW] Step started. eventType=QuoteApprovedEvent, quoteId={}, step=ALLOCATION", quoteId);
         quoteAllocationGateway.sendApproveAllocation(quoteId);
+        log.info("[WORKFLOW] Step completed. eventType=QuoteApprovedEvent, quoteId={}, step=ALLOCATION", quoteId);
+
+        log.info("[WORKFLOW] Completed. eventType=QuoteApprovedEvent, quoteId={}", quoteId);
     }
 }

@@ -64,4 +64,38 @@ public class QuoteSearchRebuildService {
                 indexedCount
         );
     }
+
+    public void rebuildAll() {
+        rebuildAllWithAliasSwitch();
+    }
+
+    public void rebuildOne(String quoteId) {
+        String currentIndexName = quoteIndexAdminService.findCurrentIndexByAlias();
+
+        if (currentIndexName == null) {
+            log.warn(
+                    "[ES_REINDEX] No current quote index alias found. Rebuilding all before indexing one quote. quoteId={}",
+                    quoteId
+            );
+            rebuildAllWithAliasSwitch();
+            return;
+        }
+
+        QuoteStateEntity entity = quoteStateRepository.findById(quoteId)
+                .orElseThrow(() -> new IllegalArgumentException("Quote state not found: " + quoteId));
+
+        QuoteDocument document = quoteSearchMapper.toDocument(entity);
+
+        elasticsearchOperations.save(
+                document,
+                IndexCoordinates.of(currentIndexName)
+        );
+
+        log.info(
+                "[ES_REINDEX] Rebuilt one quote document. quoteId={}, index={}, status={}",
+                quoteId,
+                currentIndexName,
+                document.getStatus()
+        );
+    }
 }
