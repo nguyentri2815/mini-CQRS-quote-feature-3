@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.readmodel.quote.search.document;
 
+import com.example.quote_service_eventstore.readmodel.quote.search.QuoteSearchIndexNames;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -9,7 +10,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Document(indexName = "quote_index")
+@Document(indexName = QuoteSearchIndexNames.QUOTE_INDEX_ALIAS, createIndex = false)
 public class QuoteDocument {
 
     @Id

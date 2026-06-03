@@ -147,6 +147,8 @@ public class QuoteStateProjectionHandler {
         entity.setStatus(QuoteStatus.APPROVED);
         entity.setUpdatedAt(event.occurredAt());
         entity.setLastProjectedVersion(aggregateVersion);
+        entity.setApprovedBy(event.getApprovedBy());
+        entity.setApprovedByName(event.getApprovedByName());
 
         quoteStateRepository.save(entity);
 
