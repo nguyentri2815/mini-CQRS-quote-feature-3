@@ -2,13 +2,9 @@ package com.example.quote_service_eventstore.command.quote.infrastructure.outbox
 
 import com.example.quote_service_eventstore.command.quote.infrastructure.kafka.KafkaDomainEventPublisher;
 import com.example.quote_service_eventstore.shared.messaging.DomainEventMessage;
-import com.example.quote_service_eventstore.shared.messaging.DomainEventRabbitConfig;
-import com.example.quote_service_eventstore.shared.observability.ObservabilityConstants;
 import com.example.quote_service_eventstore.shared.outbox.OutboxEventStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +28,19 @@ public class OutboxMessagePublisher {
         this.kafkaDomainEventPublisher = kafkaDomainEventPublisher;
     }
 
+    @Scheduled(fixedDelayString = "${app.outbox.publisher.fixed-delay-ms:1000}")
     @Transactional
     public void publishPendingEvents() {
         List<OutboxEventEntity> pendingEvents =
                 outboxEventRepository.findTop50ByStatusOrderByCreatedAtAsc(
                         OutboxEventStatus.PENDING
                 );
+
+        if (pendingEvents.isEmpty()) {
+            return;
+        }
+
+        log.info("[OUTBOX] Found pending events to publish. count={}", pendingEvents.size());
 
         for (OutboxEventEntity outboxEvent : pendingEvents) {
             publishOne(outboxEvent);

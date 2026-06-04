@@ -49,10 +49,26 @@ spring:
       properties:
         spring.json.add.type.headers: false
 
+    consumer:
+      group-id: quote-flow-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.trusted.packages: com.example.quote_service_eventstore.shared.messaging
+        spring.json.value.default.type: com.example.quote_service_eventstore.shared.messaging.DomainEventMessage
+        spring.json.use.type.headers: false
+
+      listener:
+        ack-mode: record
   app:
     kafka:
       topics:
         quote-events: quote-events
+    outbox:
+      publisher:
+        fixed-delay-ms: 1000
 
 logging:
   pattern:
