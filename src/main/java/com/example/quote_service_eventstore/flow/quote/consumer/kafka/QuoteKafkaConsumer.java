@@ -27,7 +27,7 @@ public class QuoteKafkaConsumer {
 
     @KafkaListener(
             topics = QuoteKafkaTopicNames.QUOTE_EVENTS,
-            groupId = "quote-flow-service"
+            groupId = "${spring.kafka.consumer.group-id:quote-flow-service}"
     )
     @Transactional
     public void consume(
