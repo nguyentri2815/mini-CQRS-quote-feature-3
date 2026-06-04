@@ -39,6 +39,21 @@ spring:
   elasticsearch:
     uris: http://localhost:9200
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        spring.json.add.type.headers: false
+
+  app:
+    kafka:
+      topics:
+        quote-events: quote-events
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [correlationId=%X{correlationId}] %logger{36} - %msg%n"

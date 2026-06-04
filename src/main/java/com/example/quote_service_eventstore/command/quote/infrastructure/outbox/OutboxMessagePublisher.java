@@ -1,5 +1,6 @@
 package com.example.quote_service_eventstore.command.quote.infrastructure.outbox;
 
+import com.example.quote_service_eventstore.command.quote.infrastructure.kafka.KafkaDomainEventPublisher;
 import com.example.quote_service_eventstore.shared.messaging.DomainEventMessage;
 import com.example.quote_service_eventstore.shared.messaging.DomainEventRabbitConfig;
 import com.example.quote_service_eventstore.shared.observability.ObservabilityConstants;
@@ -21,17 +22,16 @@ public class OutboxMessagePublisher {
     private static final Logger log = LoggerFactory.getLogger(OutboxMessagePublisher.class);
 
     private final OutboxEventRepository outboxEventRepository;
-    private final RabbitTemplate rabbitTemplate;
+    private final KafkaDomainEventPublisher kafkaDomainEventPublisher;
 
     public OutboxMessagePublisher(
             OutboxEventRepository outboxEventRepository,
-            RabbitTemplate rabbitTemplate
+            KafkaDomainEventPublisher kafkaDomainEventPublisher
     ) {
         this.outboxEventRepository = outboxEventRepository;
-        this.rabbitTemplate = rabbitTemplate;
+        this.kafkaDomainEventPublisher = kafkaDomainEventPublisher;
     }
 
-    @Scheduled(fixedDelay = 3000)
     @Transactional
     public void publishPendingEvents() {
         List<OutboxEventEntity> pendingEvents =
@@ -39,88 +39,54 @@ public class OutboxMessagePublisher {
                         OutboxEventStatus.PENDING
                 );
 
-        if (!pendingEvents.isEmpty()) {
-            log.info("[OUTBOX_PUBLISHER] Found pending events. count={}", pendingEvents.size());
-        }
-
         for (OutboxEventEntity outboxEvent : pendingEvents) {
             publishOne(outboxEvent);
         }
     }
 
     private void publishOne(OutboxEventEntity outboxEvent) {
-        String correlationId = outboxEvent.getCorrelationId();
-
-        if (correlationId == null || correlationId.isBlank()) {
-            correlationId = "unknown";
-        }
-
-        MDC.put(
-                ObservabilityConstants.CORRELATION_ID_MDC_KEY,
-                correlationId
-        );
-
         try {
-            DomainEventMessage message = new DomainEventMessage(
-                    outboxEvent.getId(),
-                    outboxEvent.getAggregateId(),
-                    outboxEvent.getAggregateType(),
-                    outboxEvent.getEventType(),
-                    outboxEvent.getPayload(),
-                    outboxEvent.getAggregateVersion(),
-                    correlationId,
-                    outboxEvent.getCreatedAt()
-            );
+            DomainEventMessage message = toMessage(outboxEvent);
 
-            log.info(
-                    "[OUTBOX_PUBLISHER] Publishing event. eventId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
-                    outboxEvent.getId(),
-                    outboxEvent.getEventType(),
-                    outboxEvent.getAggregateId(),
-                    outboxEvent.getAggregateVersion(),
-                    correlationId
-            );
-
-            rabbitTemplate.convertAndSend(
-                    DomainEventRabbitConfig.DOMAIN_EVENT_EXCHANGE,
-                    DomainEventRabbitConfig.QUOTE_EVENT_ROUTING_KEY,
-                    message
-            );
+            kafkaDomainEventPublisher.publish(message);
 
             outboxEvent.markSent(LocalDateTime.now());
 
-            log.info(
-                    "[OUTBOX_PUBLISHER] Published event and marked sent. eventId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
-                    outboxEvent.getId(),
-                    outboxEvent.getEventType(),
-                    outboxEvent.getAggregateId(),
-                    outboxEvent.getAggregateVersion(),
-                    correlationId
-            );
+            outboxEventRepository.save(outboxEvent);
 
-        } catch (Exception exception) {
-            log.error(
-                    "[OUTBOX_PUBLISHER] Failed to publish event. outboxId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
+            log.info(
+                    "[OUTBOX] Published event to Kafka. outboxId={}, eventType={}, aggregateId={}, version={}, correlationId={}",
                     outboxEvent.getId(),
                     outboxEvent.getEventType(),
                     outboxEvent.getAggregateId(),
                     outboxEvent.getAggregateVersion(),
-                    correlationId,
+                    outboxEvent.getCorrelationId()
+            );
+        } catch (Exception exception) {
+            outboxEvent.markFailed(exception.getMessage());
+            outboxEventRepository.save(outboxEvent);
+
+            log.error(
+                    "[OUTBOX] Failed to publish event to Kafka. outboxId={}, eventType={}, aggregateId={}, version={}",
+                    outboxEvent.getId(),
+                    outboxEvent.getEventType(),
+                    outboxEvent.getAggregateId(),
+                    outboxEvent.getAggregateVersion(),
                     exception
             );
-
-            outboxEvent.markFailed(exception.getMessage());
-
-            log.warn(
-                    "[OUTBOX_PUBLISHER] Marked event failed. outboxId={}, eventType={}, aggregateId={}, retryCount={}, correlationId={}",
-                    outboxEvent.getId(),
-                    outboxEvent.getEventType(),
-                    outboxEvent.getAggregateId(),
-                    outboxEvent.getRetryCount(),
-                    correlationId
-            );
-        } finally {
-            MDC.remove(ObservabilityConstants.CORRELATION_ID_MDC_KEY);
         }
+    }
+
+    private DomainEventMessage toMessage(OutboxEventEntity entity) {
+        return new DomainEventMessage(
+                entity.getId(),
+                entity.getAggregateId(),
+                entity.getAggregateType(),
+                entity.getEventType(),
+                entity.getPayload(),
+                entity.getAggregateVersion(),
+                entity.getCorrelationId(),
+                entity.getCreatedAt()
+        );
     }
 }
