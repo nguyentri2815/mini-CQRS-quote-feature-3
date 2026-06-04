@@ -65,7 +65,11 @@ public class QuoteKafkaConsumer {
             );
         } catch (Exception exception) {
             log.error(
-                    "[KAFKA_CONSUMER] Failed to consume event. messageId={}, eventType={}, aggregateId={}, version={}",
+                    "[KAFKA_CONSUMER] Failed to consume event. topic={}, partition={}, offset={}, key={}, messageId={}, eventType={}, aggregateId={}, version={}",
+                    record.topic(),
+                    record.partition(),
+                    record.offset(),
+                    record.key(),
                     message.getEventId(),
                     message.getEventType(),
                     message.getAggregateId(),

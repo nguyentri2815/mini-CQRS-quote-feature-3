@@ -3,6 +3,7 @@ package com.example.quote_service_eventstore.shared.messaging.kafka;
 public final class QuoteKafkaTopicNames {
 
     public static final String QUOTE_EVENTS = "quote-events";
+    public static final String QUOTE_EVENTS_DLT = "quote-events-dlt";
 
     private QuoteKafkaTopicNames() {
     }
